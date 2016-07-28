@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1469722643 source:/home/dacore/Documentos/MIA/MIA201403594/Fase 1/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+
