@@ -79,6 +79,8 @@ void leerComando(char* linea)
     char type[256];
     char fit[256];
     char delete[256];
+    char add[256];
+    char id[256];
 
     //casoComando 0: exec
     //casoComando 1: mkdisk
@@ -90,15 +92,23 @@ void leerComando(char* linea)
     if(strcmp(comando,"exec") == 0)
     {
         casoComando = 0;
+
         while(comando)                  //mientras aún tenga instrucciones
         {
-            printf("%s\n", comando);
             comando = strtok(NULL, " ");
         }
     }
     else if(strcmp(comando,"mkdisk") == 0)
     {
         casoComando = 1;
+        comando = strtok(NULL, " ");    //elimina el token "mkdisk"
+
+        while(comando)                  //este while recorre el comando y lo separa en una
+        {                               //lista de parámetros. Se supone que después, separo el contenido
+            char *subcomando;           //de la lista por ":" y guardo el contenido en algún lado
+            printf("el subcomando es: %s",comando); //aquí en lugar de imprimir debería guardar en una lista
+            comando = strtok(NULL, " ");
+        }
     }
     else if(strcmp(comando,"rmdisk") == 0)
     {
@@ -125,23 +135,3 @@ void leerComando(char* linea)
     printf("Acabó de leer los tokens y la línea original era: %s\n", lineaAux);
 }
 
-void analizarLinea(char* comando)
-{
-    int indice = 0;
-    int estado = 0;
-    char lexema [256] = {0};
-    char actual = malloc(strlen("solo quiero ocupar espacio :v") + 1);
-    int tamanoComando = strlen(comando);
-
-    for(indice = 0; indice <= tamanoComando; indice++)
-    {
-        actual = comando[indice];
-//
-//        switch(estado)
-//        {
-//            case 0:
-//            case 1:
-//            case 2:
-//        }
-    }
-}
