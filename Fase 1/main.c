@@ -89,25 +89,25 @@ void leerComando(char* linea)
     //casoComando 4: mount
     //casoComando 5: unmount
 
-    //lista de atributos
-    char atrSize = "size::";
-    char atrUnit = "unit::";
-    char atrPath = "path::";
-    char atrName[256];
-    char atrType[256];
-    char atrFit[256];
-    char atrDelete[256];
-    char atrAdd[256];
-    char atrId[256];
 
     if(strcmp(comando,"exec") == 0)
     {
         casoComando = 0;
+        comando = strtok(NULL, " ");    //elimina el token "exec"
+        char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+        strcpy(aux,comando); //+1 para quitar el ":" extra
+        char auxArray[256];
+        strcpy(auxArray, aux);
 
-//        while(comando)                  //mientras aún tenga instrucciones
-//        {
-//            comando = strtok(NULL, " ");
-//        }
+        while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+        {
+            comando = strtok(NULL, " ");
+            strcat(aux, " ");
+            strcat(aux, comando);
+            strcpy(auxArray,aux);
+        }
+
+        printf("El script a ejecutar tiene la ruta: %s\n", aux);
     }
     else if(strcmp(comando,"mkdisk") == 0)
     {
@@ -121,25 +121,51 @@ void leerComando(char* linea)
             if(strcmp(comando,"-size") == 0)
             {
                 comando = strtok(NULL, " ");
-                char * aux = comando + 1;       //para quitar el ":" extra
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
                 printf("El contenido del comando -size es: %s\n", aux);
             }
             else if(strcmp(comando,"+unit") == 0)
             {
                 comando = strtok(NULL, " ");
-                char * aux = comando + 1;       //para quitar el ":" extra
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
                 printf("El contenido del comando +unit es: %s\n", aux);
             }
             else if(strcmp(comando,"-path") == 0)
             {
                 comando = strtok(NULL, " ");
-                char * aux = comando + 1;       //para quitar el ":" extra
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                char auxArray[256];
+                strcpy(auxArray, aux);
+
+                while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                {
+                    comando = strtok(NULL, " ");
+                    strcat(aux, " ");
+                    strcat(aux, comando);
+                    strcpy(auxArray,aux);
+                }
+
                 printf("El contenido del comando -path es: %s\n", aux);
             }
             else if(strcmp(comando,"-name") == 0)
             {
                 comando = strtok(NULL, " ");
-                char * aux = comando + 1;       //para quitar el ":" extra
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                char auxArray[256];
+                strcpy(auxArray, aux);
+
+                while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                {
+                    comando = strtok(NULL, " ");
+                    strcat(aux, " ");
+                    strcat(aux, comando);
+                    strcpy(auxArray,aux);
+                }
+
                 printf("El contenido del comando -name es: %s\n", aux);
             }
             else
@@ -174,7 +200,5 @@ void leerComando(char* linea)
         printf("****Error: El comando \"%s\" no es válido.****\n",comando);
     }
 
-
-    printf("Acabó de leer los tokens y la línea original era: %s\n", lineaAux);
 }
 
