@@ -35,7 +35,7 @@ void concatenarComandoMultilinea(char* comandoCompleto)
 {
     char nuevaLinea[256];
     scanf(" %[^\n]", nuevaLinea);
-    strcat(comandoCompleto, " ");
+    //strcat(comandoCompleto, " ");
     strcat(comandoCompleto, nuevaLinea);
 
     if(strcmp(&nuevaLinea[strlen(nuevaLinea) -1],"\\") == 0)
@@ -89,25 +89,68 @@ void leerComando(char* linea)
     //casoComando 4: mount
     //casoComando 5: unmount
 
+    //lista de atributos
+    char atrSize = "size::";
+    char atrUnit = "unit::";
+    char atrPath = "path::";
+    char atrName[256];
+    char atrType[256];
+    char atrFit[256];
+    char atrDelete[256];
+    char atrAdd[256];
+    char atrId[256];
+
     if(strcmp(comando,"exec") == 0)
     {
         casoComando = 0;
 
-        while(comando)                  //mientras aún tenga instrucciones
-        {
-            comando = strtok(NULL, " ");
-        }
+//        while(comando)                  //mientras aún tenga instrucciones
+//        {
+//            comando = strtok(NULL, " ");
+//        }
     }
     else if(strcmp(comando,"mkdisk") == 0)
     {
         casoComando = 1;
-        comando = strtok(NULL, " ");    //elimina el token "mkdisk"
+        comando = strtok(NULL, ":");    //elimina el token "mkdisk"
 
         while(comando)                  //este while recorre el comando y lo separa en una
-        {                               //lista de parámetros. Se supone que después, separo el contenido
-            char *subcomando;           //de la lista por ":" y guardo el contenido en algún lado
-            printf("el subcomando es: %s",comando); //aquí en lugar de imprimir debería guardar en una lista
-            comando = strtok(NULL, " ");
+        {                               //lista de parámetros. Luego de comparar el parámetro separa
+            aMinuscula(comando);        //de la lista por ":" y guardo el contenido en algún lado
+
+            if(strcmp(comando,"-size") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char * aux = comando + 1;       //para quitar el ":" extra
+                printf("El contenido del comando -size es: %s\n", aux);
+            }
+            else if(strcmp(comando,"+unit") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char * aux = comando + 1;       //para quitar el ":" extra
+                printf("El contenido del comando +unit es: %s\n", aux);
+            }
+            else if(strcmp(comando,"-path") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char * aux = comando + 1;       //para quitar el ":" extra
+                printf("El contenido del comando -path es: %s\n", aux);
+            }
+            else if(strcmp(comando,"-name") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char * aux = comando + 1;       //para quitar el ":" extra
+                printf("El contenido del comando -name es: %s\n", aux);
+            }
+            else
+            {
+                char aux[30];
+                strcpy(aux,comando);
+                comando = strtok(NULL, " ");
+                printf("****El parámetro \"%s\" no es válido****\n",aux);
+            }
+
+            comando = strtok(NULL, ":");
         }
     }
     else if(strcmp(comando,"rmdisk") == 0)
