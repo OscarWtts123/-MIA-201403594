@@ -35,7 +35,6 @@ void concatenarComandoMultilinea(char* comandoCompleto)
 {
     char nuevaLinea[256];
     scanf(" %[^\n]", nuevaLinea);
-    //strcat(comandoCompleto, " ");
     strcat(comandoCompleto, nuevaLinea);
 
     if(strcmp(&nuevaLinea[strlen(nuevaLinea) -1],"\\") == 0)
@@ -72,15 +71,15 @@ void leerComando(char* linea)
     aMinuscula(comando);
 
     //lista de parámetros de todos los comandos
-    char size[256];
-    char unit[256];
-    char path[256];
-    char name[256];
-    char type[256];
-    char fit[256];
-    char delete[256];
-    char add[256];
-    char id[256];
+    char size[256] = "";
+    char unit[256] = "";
+    char path[256] = "";
+    char name[256] = "";
+    char type[256] = "";
+    char fit[256] = "";
+    char tdelete[256] = "";
+    char add[256] = "";
+    char id[256] = "";
 
     //casoComando 0: exec
     //casoComando 1: mkdisk
@@ -123,14 +122,16 @@ void leerComando(char* linea)
                 comando = strtok(NULL, " ");
                 char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
                 strcpy(aux,comando+1); //+1 para quitar el ":" extra
-                printf("El contenido del comando -size es: %s\n", aux);
+                strcpy(size, aux);
+//                printf("El contenido del comando -size es: %s\n", aux);
             }
             else if(strcmp(comando,"+unit") == 0)
             {
                 comando = strtok(NULL, " ");
                 char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
                 strcpy(aux,comando+1); //+1 para quitar el ":" extra
-                printf("El contenido del comando +unit es: %s\n", aux);
+                strcpy(unit, aux);
+//                printf("El contenido del comando +unit es: %s\n", aux);
             }
             else if(strcmp(comando,"-path") == 0)
             {
@@ -148,7 +149,8 @@ void leerComando(char* linea)
                     strcpy(auxArray,aux);
                 }
 
-                printf("El contenido del comando -path es: %s\n", aux);
+                strcpy(path, aux);
+//                printf("El contenido del comando -path es: %s\n", aux);
             }
             else if(strcmp(comando,"-name") == 0)
             {
@@ -166,7 +168,8 @@ void leerComando(char* linea)
                     strcpy(auxArray,aux);
                 }
 
-                printf("El contenido del comando -name es: %s\n", aux);
+                strcpy(name, aux);
+//                printf("El contenido del comando -name es: %s\n", aux);
             }
             else
             {
@@ -178,6 +181,7 @@ void leerComando(char* linea)
 
             comando = strtok(NULL, ":");
         }
+        ejecutarMKDISK(size, unit, path, name);
     }
     else if(strcmp(comando,"rmdisk") == 0)
     {
@@ -202,3 +206,40 @@ void leerComando(char* linea)
 
 }
 
+//ejecuta el comando "mkdisk"
+void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
+{
+    if((strcmp(size, "") != 0) && (strcmp(path, "") != 0) && (strcmp(name, "") != 0))
+    {
+    }
+    else
+    {
+        printf("\n***Verifica que hayas incluido todos los parámetros obligatorios para el comando mkdisk***\n");
+        printf("-size\n");
+        printf("-path\n");
+        printf("-name\n\n");
+    }
+}
+
+//ejecuta el comando "rmdisk"
+void ejecutarRMDISK(char* path)
+{
+
+}
+//ejecuta el comando "fdisk"
+void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, char* tdelete, char* name, char* add)
+{
+
+}
+
+//ejecuta el comando "mount"
+void ejecutarMOUNT(char* path, char* name)
+{
+
+}
+
+//ejecuta el comando "unmount"
+void ejecutarUNMOUNT(char* id)
+{
+
+}
