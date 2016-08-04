@@ -299,7 +299,7 @@ void ejecutarRMDISK(char* path)
     }
     else
     {
-        printf("\n***Verifica que hayas incluido todos los parámetros TE AMO EDWARD obligatorios para el comando rmdisk***\n");
+        printf("\n***Verifica que hayas incluido todos los parámetros obligatorios para el comando rmdisk***\n");
         printf("-path\n\n");
 
     }
