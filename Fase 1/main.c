@@ -42,7 +42,7 @@ void concatenarComandoMultilinea(char* comandoCompleto)
         comandoCompleto[strlen(comandoCompleto) -1] = '\0';
         concatenarComandoMultilinea(comandoCompleto);
     }
-}
+}//:D
 
 //este método convierte un string a su equivalente en minúscula
 void aMinuscula(char* original)
@@ -74,7 +74,7 @@ void leerComando(char* linea)
     char size[256] = "";
     char unit[256] = "";
     char path[256] = "";
-    char name[256] = "";
+    char name[254] = "";
     char type[256] = "";
     char fit[256] = "";
     char tdelete[256] = "";
@@ -211,6 +211,42 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
 {
     if((strcmp(size, "") != 0) && (strcmp(path, "") != 0) && (strcmp(name, "") != 0))
     {
+        int sizeDouble = atof(size);       //convierte "size" a un entero para poder hacer validaciones
+        aMinuscula(unit);
+
+        if(sizeDouble > 0)
+        {
+            if((strcmp(unit,"k") == 0) || ((strcmp(unit,"m") == 0)))
+            {
+                //verificar la extensión del disco
+                char* extension = strstr(name,".");
+
+                if(strcasecmp(extension,".dsk\"") == 0)
+                {
+                    //quitar las comillas del path y name y concaternarlos
+                    char* nameLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                    strncpy(nameLimpio,name+1,strlen(name)-2); //-2 porque toma en cuenta las 2 comillas
+
+                    char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                    strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
+                }
+                else
+                {
+                    printf("\n****La extensión del disco debe ser \".dsk\"****\n");
+                }
+
+
+            }
+            else
+            {
+                printf("\n****El parámetro +unit debe ser \"K\" o \"M\"****\n");
+            }
+        }
+        else
+        {
+            printf("\n****El parámetro -size debe ser un número mayor a 0****\n");
+        }
+
     }
     else
     {
@@ -224,7 +260,16 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
 //ejecuta el comando "rmdisk"
 void ejecutarRMDISK(char* path)
 {
+    if(strcmp(path, "") != 0)
+    {
+        printf("\nel contenido de path: %s\n", path);
+    }
+    else
+    {
+        printf("\n***Verifica que hayas incluido todos los parámetros TE AMO EDWARD obligatorios para el comando rmdisk***\n");
+        printf("-path\n\n");
 
+    }
 }
 //ejecuta el comando "fdisk"
 void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, char* tdelete, char* name, char* add)
