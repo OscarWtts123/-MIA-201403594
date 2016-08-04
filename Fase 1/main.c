@@ -235,13 +235,13 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
                     strcat(crearDirectorio, path);
                     system(crearDirectorio);
 
-                    //crear el disco
-                    char crearArchivo[100] = "touch ";
-                    strcat(crearArchivo, "\"");
-                    strcat(crearArchivo, pathLimpio);
-                    strcat(crearArchivo, nameLimpio);
-                    strcat(crearArchivo, "\"");
-                    system(crearArchivo);
+//                    //crear el disco
+//                    char crearArchivo[100] = "touch ";
+//                    strcat(crearArchivo, "\"");
+//                    strcat(crearArchivo, pathLimpio);
+//                    strcat(crearArchivo, nameLimpio);
+//                    strcat(crearArchivo, "\"");
+//                    system(crearArchivo);
 
                     int unidades = 1024 * 1024 * atof(size); // unidad por defecto Megabytes
 
