@@ -65,7 +65,7 @@ void leerComando(char* linea)
 {
     int casoComando = -1;
     char* comando;                                                          //variable que guarda los tokens de la línea
-    char* lineaAux = malloc(strlen("solo quiero ocupar espacio :v") + 1);   //inicializando variable auxiliar
+    char* lineaAux = malloc(strlen("solo quiero ocupar espacio :v") + 100);   //inicializando variable auxiliar
     strcpy(lineaAux,linea);                                                 //guardando el contenido de la línea leída
     comando = strtok(linea," ");                                            //separa el comando del resto de instrucciones
     aMinuscula(comando);
@@ -93,20 +93,31 @@ void leerComando(char* linea)
     {
         casoComando = 0;
         comando = strtok(NULL, " ");    //elimina el token "exec"
-        char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
-        strcpy(aux,comando); //+1 para quitar el ":" extra
-        char auxArray[256];
-        strcpy(auxArray, aux);
 
-        while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+        if(comando)
         {
-            comando = strtok(NULL, " ");
-            strcat(aux, " ");
-            strcat(aux, comando);
-            strcpy(auxArray,aux);
-        }
+            char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+            strcpy(aux,comando); //+1 para quitar el ":" extra
+            char auxArray[256];
+            strcpy(auxArray, aux);
 
-        printf("El script a ejecutar tiene la ruta: %s\n", aux);
+            while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+            {
+                comando = strtok(NULL, " ");
+                strcat(aux, " ");
+                strcat(aux, comando);
+                strcpy(auxArray,aux);
+            }
+
+            printf("El script a ejecutar tiene la ruta: %s\n", aux);
+            /**
+            Aquí debería mandar a llamar a la función "ejecutarEXEC"
+            **/
+        }
+        else
+        {
+            printf("\n***Debes agregar la ruta del script.***\n");
+        }
     }
     else if(strcmp(comando,"mkdisk") == 0)
     {
@@ -120,7 +131,7 @@ void leerComando(char* linea)
             if(strcmp(comando,"-size") == 0)
             {
                 comando = strtok(NULL, " ");
-                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
                 strcpy(aux,comando+1); //+1 para quitar el ":" extra
                 strcpy(size, aux);
 //                printf("El contenido del comando -size es: %s\n", aux);
@@ -128,7 +139,7 @@ void leerComando(char* linea)
             else if(strcmp(comando,"+unit") == 0)
             {
                 comando = strtok(NULL, " ");
-                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
                 strcpy(aux,comando+1); //+1 para quitar el ":" extra
                 strcpy(unit, aux);
 //                printf("El contenido del comando +unit es: %s\n", aux);
@@ -136,7 +147,7 @@ void leerComando(char* linea)
             else if(strcmp(comando,"-path") == 0)
             {
                 comando = strtok(NULL, " ");
-                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
                 strcpy(aux,comando+1); //+1 para quitar el ":" extra
                 char auxArray[256];
                 strcpy(auxArray, aux);
@@ -155,7 +166,7 @@ void leerComando(char* linea)
             else if(strcmp(comando,"-name") == 0)
             {
                 comando = strtok(NULL, " ");
-                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
                 strcpy(aux,comando+1); //+1 para quitar el ":" extra
                 char auxArray[256];
                 strcpy(auxArray, aux);
@@ -186,6 +197,42 @@ void leerComando(char* linea)
     else if(strcmp(comando,"rmdisk") == 0)
     {
         casoComando = 2;
+        comando = strtok(NULL, ":");    //elimina el token "mkdisk"
+
+        while(comando)                  //este while recorre el comando y lo separa en una
+        {                               //lista de parámetros. Luego de comparar el parámetro separa
+            aMinuscula(comando);        //de la lista por ":" y guardo el contenido en algún lado
+
+            if(strcmp(comando,"-path") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                char auxArray[256];
+                strcpy(auxArray, aux);
+
+                while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                {
+                    comando = strtok(NULL, " ");
+                    strcat(aux, " ");
+                    strcat(aux, comando);
+                    strcpy(auxArray,aux);
+                }
+
+                strcpy(path, aux);
+            }
+            else
+            {
+                char aux[30];
+                strcpy(aux,comando);
+                comando = strtok(NULL, " ");
+                printf("****El parámetro \"%s\" no es válido****\n",aux);
+            }
+
+            comando = strtok(NULL, ":");
+        }
+
+        ejecutarRMDISK(path);
     }
     else if(strcmp(comando,"fdisk") == 0)
     {
@@ -206,6 +253,12 @@ void leerComando(char* linea)
 
 }
 
+//ejecuta el comando "exec"
+void ejecutarEXEC(char* path)
+{
+
+}
+
 //ejecuta el comando "mkdisk"
 void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
 {
@@ -216,7 +269,7 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
 
         if(sizeDouble > 0)
         {
-            if((strcmp(unit,"k") == 0) || ((strcmp(unit,"m") == 0)))
+            if((strcmp(unit,"k") == 0) || ((strcmp(unit,"m") == 0)) || ((strcmp(unit,"") == 0)))
             {
                 //verificar la extensión del disco
                 char* extension = strstr(name,".");
@@ -224,24 +277,17 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
                 if(strcasecmp(extension,".dsk\"") == 0)
                 {
                     //quitar las comillas del path y name y concaternarlos
-                    char* nameLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                    char* nameLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
                     strncpy(nameLimpio,name+1,strlen(name)-2); //-2 porque toma en cuenta las 2 comillas
 
-                    char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                    char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
                     strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
-
+                    printf("nombre: %s",nameLimpio);
+                    printf("path: %s",pathLimpio);
                     //crear el directorio si no existe
                     char crearDirectorio[100] = "mkdir -p ";
                     strcat(crearDirectorio, path);
                     system(crearDirectorio);
-
-//                    //crear el disco
-//                    char crearArchivo[100] = "touch ";
-//                    strcat(crearArchivo, "\"");
-//                    strcat(crearArchivo, pathLimpio);
-//                    strcat(crearArchivo, nameLimpio);
-//                    strcat(crearArchivo, "\"");
-//                    system(crearArchivo);
 
                     int unidades = 1024 * 1024 * atof(size); // unidad por defecto Megabytes
 
@@ -295,7 +341,29 @@ void ejecutarRMDISK(char* path)
 {
     if(strcmp(path, "") != 0)
     {
-        printf("\nel contenido de path: %s\n", path);
+        printf("¿Quieres eliminar todo el contenido del disco? [S/n]\n");
+        char nuevaLinea[256];
+        scanf(" %[^\n]", nuevaLinea);
+        aMinuscula(nuevaLinea);
+
+        if(strcmp(nuevaLinea,"s") == 0)
+        {
+            char eliminarDisco [100] = "rm ";
+            strcat(eliminarDisco, path);
+            system(eliminarDisco);
+        }
+
+//        char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+//        strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
+//        printf("la ruta %s\n",pathLimpio);
+//        FILE *disco;
+//        disco = fopen(pathLimpio,"r");
+//
+//        if(disco == NULL)
+//        {
+//            printf("no hay disco :v");
+//        }
+
     }
     else
     {
