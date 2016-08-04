@@ -229,6 +229,39 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
 
                     char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 1);
                     strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
+
+                    //crear el directorio si no existe
+                    char crearDirectorio[100] = "mkdir -p ";
+                    strcat(crearDirectorio, path);
+                    system(crearDirectorio);
+
+                    //crear el disco
+                    char crearArchivo[100] = "touch ";
+                    strcat(crearArchivo, "\"");
+                    strcat(crearArchivo, pathLimpio);
+                    strcat(crearArchivo, nameLimpio);
+                    strcat(crearArchivo, "\"");
+                    system(crearArchivo);
+
+                    int unidades = 1024 * 1024 * atof(size); // unidad por defecto Megabytes
+
+                    if(strcmp(unit,"k") == 0)
+                    {
+                        unidades = 1024 * atof(size);
+                    }
+
+                    //inicializa el disco con \0
+                    char llenarDisco[100] = "dd if=/dev/zero of='";
+                    strcat(llenarDisco, pathLimpio);
+                    strcat(llenarDisco, nameLimpio);
+                    strcat(llenarDisco, "' bs=");
+                    char* unidadesChar = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+                    sprintf(unidadesChar, "%d", unidades);
+                    strcat(llenarDisco, unidadesChar);
+                    strcat(llenarDisco, " count=1");
+                    system(llenarDisco);
+                    printf("\n****¡Disco creado con éxito!****\n");
+
                 }
                 else
                 {
