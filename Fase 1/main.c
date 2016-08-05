@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "structs.h"
 
 int main()
 {
@@ -282,8 +283,7 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
 
                     char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
                     strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
-                    printf("nombre: %s",nameLimpio);
-                    printf("path: %s",pathLimpio);
+
                     //crear el directorio si no existe
                     char crearDirectorio[100] = "mkdir -p ";
                     strcat(crearDirectorio, path);
@@ -296,16 +296,62 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
                         unidades = 1024 * atof(size);
                     }
 
+/**
+por acá debería crear el mbr e inicializarlo
+para luego sumarle el espacio que ocupa
+al espacio total del disco
+**/
+                    MBR mbr;
+                    time_t tiempo = time(0);                                            //esta parte guarda la hora
+                    struct tm *tlocal = localtime(&tiempo);                             //y fecha actual del sistema
+                    strftime(mbr.mbr_fecha_creacion,128,"%d/%m/%y %H:%M:%S",tlocal);    //para la creación del disco
+
+                    mbr.mbr_tamano = unidades;
+                    srand(time(NULL));                      //toma el tiempo como semilla para iniciar el random
+                    mbr.mbr_disk_signature = rand();
+                    mbr.mbr_particion[0].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
+                    mbr.mbr_particion[1].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
+                    mbr.mbr_particion[2].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
+                    mbr.mbr_particion[3].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
+
                     //inicializa el disco con \0
+                    char* ruta = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                    strcpy(ruta,"");
+                    strcat(ruta, pathLimpio);
+                    strcat(ruta, nameLimpio);
+                    FILE *disco = fopen (ruta, "w+b"); //abro y creo el archivo aquí, para tener control del puntero antes de comenzar
+                                                        //a llenar de ceros
+
                     char llenarDisco[100] = "dd if=/dev/zero of='";
                     strcat(llenarDisco, pathLimpio);
                     strcat(llenarDisco, nameLimpio);
                     strcat(llenarDisco, "' bs=");
                     char* unidadesChar = malloc(strlen("solo quiero ocupar espacio :v") + 1);
-                    sprintf(unidadesChar, "%d", unidades);
+/**este le hace
+espacio al mbr**/   //sprintf(unidadesChar, "%d", unidades + sizeof(mbr));
+
+/**este toma espacio
+del disco para
+el mbr**/           sprintf(unidadesChar, "%d", unidades);
+
+                    /**por el momento, le quito espacio al disco para almacenar el mbr**/
+
                     strcat(llenarDisco, unidadesChar);
                     strcat(llenarDisco, " count=1");
                     system(llenarDisco);
+
+                    //escribe el mbr en el disco
+                    if(disco == NULL)
+                    {
+                        printf("esta charada no sirve\n");
+                        printf("%s\n",ruta);
+                        printf("%s\n",pathLimpio);
+                        printf("%s\n",nameLimpio);
+                    }
+                    fseek(disco,0,SEEK_SET);
+                    fwrite(&mbr,sizeof(mbr),1,disco);
+                    fclose(disco);
+
                     printf("\n****¡Disco creado con éxito!****\n");
 
                 }
@@ -352,17 +398,6 @@ void ejecutarRMDISK(char* path)
             strcat(eliminarDisco, path);
             system(eliminarDisco);
         }
-
-//        char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 1);
-//        strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
-//        printf("la ruta %s\n",pathLimpio);
-//        FILE *disco;
-//        disco = fopen(pathLimpio,"r");
-//
-//        if(disco == NULL)
-//        {
-//            printf("no hay disco :v");
-//        }
 
     }
     else

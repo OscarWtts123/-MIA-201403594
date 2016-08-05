@@ -1,9 +1,10 @@
 # depslib dependency file v1.0
-1470328345 source:/home/dacore/Documentos/MIA/MIA201403594/Fase 1/main.c
+1470422434 source:/home/dacore/Documentos/MIA/MIA201403594/Fase 1/main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	<ctype.h>
+	"structs.h"
 
 1470007221 source:/home/dacore/Documentos/MIA/MIA201403594/Fase 1/estructuras.c
 	<stdio.h>
@@ -14,4 +15,7 @@
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
+
+1470417788 /home/dacore/Documentos/MIA/MIA201403594/Fase 1/structs.h
+	<time.h>
 
