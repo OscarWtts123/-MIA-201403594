@@ -93,31 +93,41 @@ void leerComando(char* linea)
     if(strcmp(comando,"exec") == 0)
     {
         casoComando = 0;
-        comando = strtok(NULL, " ");    //elimina el token "exec"
+        comando = strtok(NULL, ":");    //elimina el token "exec"
 
-        if(comando)
-        {
-            char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
-            strcpy(aux,comando); //+1 para quitar el ":" extra
-            char auxArray[256];
-            strcpy(auxArray, aux);
+        while(comando)                  //este while recorre el comando y lo separa en una
+        {                               //lista de parámetros. Luego de comparar el parámetro separa
+            aMinuscula(comando);        //de la lista por ":" y guardo el contenido en algún lado
 
-            while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+            if(strcmp(comando,"-path") == 0)
             {
                 comando = strtok(NULL, " ");
-                strcat(aux, " ");
-                strcat(aux, comando);
-                strcpy(auxArray,aux);
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                char auxArray[256];
+                strcpy(auxArray, aux);
+
+                while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                {
+                    comando = strtok(NULL, " ");
+                    strcat(aux, " ");
+                    strcat(aux, comando);
+                    strcpy(auxArray,aux);
+                }
+
+                strcpy(path, aux);
+
+                ejecutarEXEC(aux);
+            }
+            else
+            {
+                char aux[30];
+                strcpy(aux,comando);
+                comando = strtok(NULL, " ");
+                printf("****El parámetro \"%s\" no es válido****\n",aux);
             }
 
-            printf("El script a ejecutar tiene la ruta: %s\n", aux);
-            /**
-            Aquí debería mandar a llamar a la función "ejecutarEXEC"
-            **/
-        }
-        else
-        {
-            printf("\n***Debes agregar la ruta del script.***\n");
+            comando = strtok(NULL, ":");
         }
     }
     else if(strcmp(comando,"mkdisk") == 0)
@@ -257,7 +267,64 @@ void leerComando(char* linea)
 //ejecuta el comando "exec"
 void ejecutarEXEC(char* path)
 {
+    //quitar las comillas del path
+    char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+    strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
 
+    //Verificar que el archivo exista
+    FILE *script = fopen(pathLimpio,"r");
+    if(script != NULL)
+    {
+        char *linea = malloc(500);
+        printf("\n");
+
+        while(fgets(linea,300,script) != NULL)
+        {
+            if(strcmp(linea,"\n")!=0)
+            {
+                char lineaLimpia [300];
+                strcpy(lineaLimpia,"");
+                strcpy(lineaLimpia,linea);
+
+                if(lineaLimpia[strlen(lineaLimpia) -1] =='\n')
+                {
+                    lineaLimpia[strlen(lineaLimpia) -1] = '\0';
+                }
+
+                if(lineaLimpia[0] != '#') //los comentarios no se ejecutan, solo se imprimen en pantalla
+                {
+                    if(strcmp(&lineaLimpia[strlen(lineaLimpia) -1],"\\") == 0)
+                    {
+                        lineaLimpia[strlen(lineaLimpia) -1] = '\0';
+
+                        char nuevaLinea[300];
+                        fgets(nuevaLinea,300,script);
+                        strcat(lineaLimpia, nuevaLinea);
+                        if(lineaLimpia[strlen(lineaLimpia) -1] =='\n')
+                        {
+                            lineaLimpia[strlen(lineaLimpia) -1] = '\0';
+                        }
+                    }
+
+                    printf("\n%s\n",lineaLimpia);
+                    leerComando(lineaLimpia);
+                }
+                else
+                {
+                    printf("\n%s",lineaLimpia);
+                }
+
+            }
+            else
+            {
+                printf("\n");
+            }
+        }
+    }
+    else
+    {
+        printf("\n***El archivo que intentas cargar no existe***\n");
+    }
 }
 
 //ejecuta el comando "mkdisk"
@@ -397,6 +464,8 @@ void ejecutarRMDISK(char* path)
             char eliminarDisco [100] = "rm ";
             strcat(eliminarDisco, path);
             system(eliminarDisco);
+
+            printf("\n****¡Disco eliminado exitosamente!****\n");
         }
 
     }
