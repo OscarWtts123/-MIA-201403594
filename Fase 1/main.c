@@ -124,7 +124,7 @@ void leerComando(char* linea)
                 char aux[30];
                 strcpy(aux,comando);
                 comando = strtok(NULL, " ");
-                printf("****El parámetro \"%s\" no es válido****\n",aux);
+                printf("\x1B[33m****El parámetro \"%s\" no es válido****\x1B[0m\n",aux);
             }
 
             comando = strtok(NULL, ":");
@@ -198,7 +198,7 @@ void leerComando(char* linea)
                 char aux[30];
                 strcpy(aux,comando);
                 comando = strtok(NULL, " ");
-                printf("****El parámetro \"%s\" no es válido****\n",aux);
+                printf("\x1B[33m****El parámetro \"%s\" no es válido****\x1B[0m\n",aux);
             }
 
             comando = strtok(NULL, ":");
@@ -237,7 +237,7 @@ void leerComando(char* linea)
                 char aux[30];
                 strcpy(aux,comando);
                 comando = strtok(NULL, " ");
-                printf("****El parámetro \"%s\" no es válido****\n",aux);
+                printf("\x1B[33m****El parámetro \"%s\" no es válido****\x1B[0m\n",aux);
             }
 
             comando = strtok(NULL, ":");
@@ -345,7 +345,7 @@ void leerComando(char* linea)
                 char aux[30];
                 strcpy(aux,comando);
                 comando = strtok(NULL, " ");
-                printf("****El parámetro \"%s\" no es válido****\n",aux);
+                printf("\x1B[33m****El parámetro \"%s\" no es válido****\x1B[0m\n",aux);
             }
 
             comando = strtok(NULL, ":");
@@ -410,7 +410,7 @@ void leerComando(char* linea)
                     char aux[30];
                     strcpy(aux,comando);
                     comando = strtok(NULL, " ");
-                    printf("****El parámetro \"%s\" no es válido****\n",aux);
+                printf("\x1B[33m****El parámetro \"%s\" no es válido****\x1B[0m\n",aux);
                 }
 
                 comando = strtok(NULL, ":");
@@ -424,7 +424,7 @@ void leerComando(char* linea)
     }
     else
     {
-        printf("****Error: El comando \"%s\" no es válido.****\n",comando);
+        printf("\x1B[33m****Error: El comando \"%s\" no es válido.****\x1B[0m\n",comando);
     }
 
 }
@@ -480,7 +480,7 @@ void ejecutarEXEC(char* path)
                     {
                         lineaLimpia[strlen(lineaLimpia) -1] = '\0';
                     }
-                    printf("\n%s",lineaLimpia);
+                    printf("\n\x1B[32m%s\x1B[0m",lineaLimpia);
                 }
 
             }
@@ -492,7 +492,7 @@ void ejecutarEXEC(char* path)
     }
     else
     {
-        printf("\n***El archivo que intentas cargar no existe***\n");
+        printf("\n\x1B[33m***El archivo que intentas cargar no existe***\x1B[0m\n");
     }
 }
 
@@ -610,37 +610,37 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
                         fwrite(&mbr,sizeof(mbr),1,disco);
                         fclose(disco);
 
-                        printf("\n****¡Disco creado con éxito!****\n");
+                        printf("\n\x1B[33m****¡Disco creado con éxito!****\x1B[0m\n");
                     }
                     else
                     {
-                        printf("\n****El tamaño mínimo de un disco debe ser de 10MB****\n");
+                        printf("\n\x1B[33m****El tamaño mínimo de un disco debe ser de 10MB****\x1B[0m\n");
                     }
                 }
                 else
                 {
-                    printf("\n****La extensión del disco debe ser \".dsk\"****\n");
+                    printf("\n\x1B[33m****La extensión del disco debe ser \".dsk\"****\x1B[0m\n");
                 }
 
 
             }
             else
             {
-                printf("\n****El parámetro +unit debe ser \"K\" o \"M\"****\n");
+                printf("\n\x1B[33m****El parámetro +unit debe ser \"K\" o \"M\"****\x1B[0m\n");
             }
         }
         else
         {
-            printf("\n****El parámetro -size debe ser un número mayor a 0****\n");
+            printf("\n\x1B[33m****El parámetro -size debe ser un número mayor a 0****\x1B[0m\n");
         }
 
     }
     else
     {
-        printf("\n***Verifica que hayas incluido todos los parámetros obligatorios para el comando mkdisk***\n");
+        printf("\n\x1B[33m***Verifica que hayas incluido todos los parámetros obligatorios para el comando mkdisk***\n");
         printf("-size\n");
         printf("-path\n");
-        printf("-name\n\n");
+        printf("-name\x1B[0m\n\n");
     }
 }
 
@@ -649,7 +649,7 @@ void ejecutarRMDISK(char* path)
 {
     if(strcmp(path, "") != 0)
     {
-        printf("¿Quieres eliminar todo el contenido del disco? [S/n]\n");
+        printf("\x1B[31m¿Quieres eliminar todo el contenido del disco? [S/n]\x1B[0m\n");
         char nuevaLinea[256];
         scanf(" %[^\n]", nuevaLinea);
         aMinuscula(nuevaLinea);
@@ -660,14 +660,14 @@ void ejecutarRMDISK(char* path)
             strcat(eliminarDisco, path);
             system(eliminarDisco);
 
-            printf("\n****¡Disco eliminado exitosamente!****\n");
+            //printf("\n\x1B[33m****¡Disco eliminado exitosamente!****\x1B[0m\n");
         }
 
     }
     else
     {
-        printf("\n***Verifica que hayas incluido todos los parámetros obligatorios para el comando rmdisk***\n");
-        printf("-path\n\n");
+        printf("\n\x1B[33m***Verifica que hayas incluido todos los parámetros obligatorios para el comando rmdisk***\n");
+        printf("-path\x1B[0m\n\n");
 
     }
 }
@@ -730,20 +730,20 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                         {
                             if(banderaTamano == 1) //sí cumple con el mínimo de tamaño
                             {
-                                crearParticion();
+//                                crearParticion();
                             }
                             else
                             {
-                                printf("\n****El tamaño mínimo de una partición debe ser de 2MB****\n");
+                                printf("\n\x1B[33m****El tamaño mínimo de una partición debe ser de 2MB****\x1B[0m\n");
                             }
                         }
                         else if((strcmp(tdelete,"") != 0) && (strcmp(add,"") == 0)) //significa que se quiere borrar una partición
                         {
-                            eliminarParticion();
+//                            eliminarParticion();
                         }
                         else if((strcmp(tdelete,"") == 0) && (strcmp(add,"") != 0)) //significa que se quiere agregar/quitar tamaño
                         {
-                            redimensionarParticion();
+//                            redimensionarParticion();
                         }
 
                         fclose(disco);
@@ -751,32 +751,32 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                     }
                     else
                     {
-                        printf("\n****El parámetro +type debe ser \"BF\", \"FF\" o \"WF\"****\n");
+                        printf("\n\x1B[33m****El parámetro +type debe ser \"BF\", \"FF\" o \"WF\"****\x1B[0m\n");
                     }
                 }
                 else
                 {
-                    printf("\n****El parámetro +type debe ser \"P\", \"E\" o \"L\"****\n");
+                    printf("\n\x1B[33m****El parámetro +type debe ser \"P\", \"E\" o \"L\"****\x1B[0m\n");
                 }
             }
             else
             {
-                printf("\n****El parámetro +unit debe ser \"B\", \"K\" o \"M\"****\n");
+                printf("\n\x1B[33m****El parámetro +unit debe ser \"B\", \"K\" o \"M\"****\x1B[0m\n");
             }
         }
         else
         {
-            printf("\n****El disco que deseas modificar no existe. Verifica la ruta.****\n");
+            printf("\n\x1B[33m****El disco que deseas modificar no existe. Verifica la ruta.****\x1B[0m\n");
         }
 
 
     }
     else
     {
-        printf("\n***Verifica que hayas incluido todos los parámetros obligatorios para el comando fdisk***\n");
+        printf("\n\x1B[33m***Verifica que hayas incluido todos los parámetros obligatorios para el comando fdisk***\n");
         printf("-size\n");
         printf("-path\n");
-        printf("-name\n\n");
+        printf("-name\x1B[0m\n\n");
     }
 }
 
