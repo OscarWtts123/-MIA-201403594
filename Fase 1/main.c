@@ -355,6 +355,68 @@ void leerComando(char* linea)
     else if(strcmp(comando,"mount") == 0)
     {
         casoComando = 4;
+        comando = strtok(NULL, ":");    //elimina el token "mount"
+
+        if(comando == NULL) //SIGNIFICIA QUE NO VIENEN PARAMETROS
+        {
+            mostrarParticionesMontadas();
+        }
+        else
+        {
+            while(comando)                  //este while recorre el comando y lo separa en una
+            {                               //lista de parámetros. Luego de comparar el parámetro separa
+                aMinuscula(comando);        //de la lista por ":" y guardo el contenido en algún lado
+
+                if(strcmp(comando,"-path") == 0)
+                {
+                    comando = strtok(NULL, " ");
+                    char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                    strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                    char auxArray[256];
+                    strcpy(auxArray, aux);
+
+                    while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                    {
+                        comando = strtok(NULL, " ");
+                        strcat(aux, " ");
+                        strcat(aux, comando);
+                        strcpy(auxArray,aux);
+                    }
+
+                    strcpy(path, aux);
+    //                printf("El contenido del comando -path es: %s\n", aux);
+                }
+                else if(strcmp(comando,"-name") == 0)
+                {
+                    comando = strtok(NULL, " ");
+                    char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                    strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                    char auxArray[256];
+                    strcpy(auxArray, aux);
+
+                    while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                    {
+                        comando = strtok(NULL, " ");
+                        strcat(aux, " ");
+                        strcat(aux, comando);
+                        strcpy(auxArray,aux);
+                    }
+
+                    strcpy(name, aux);
+    //                printf("El contenido del comando -name es: %s\n", aux);
+                }
+                else
+                {
+                    char aux[30];
+                    strcpy(aux,comando);
+                    comando = strtok(NULL, " ");
+                    printf("****El parámetro \"%s\" no es válido****\n",aux);
+                }
+
+                comando = strtok(NULL, ":");
+            }
+            ejecutarMOUNT(path, name);
+        }
     }
     else if(strcmp(comando,"unmount:") == 0)
     {
@@ -609,23 +671,125 @@ void ejecutarRMDISK(char* path)
 
     }
 }
+
 //ejecuta el comando "fdisk"
 void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, char* tdelete, char* name, char* add)
 {
-    printf("size: %s\n", size);
-    printf("unit: %s\n", unit);
-    printf("path: %s\n", path);
-    printf("type: %s\n", type);
-    printf("fit: %s\n", fit);
-    printf("tdelete: %s\n", tdelete);
-    printf("name: %s\n", name);
-    printf("add: %s\n", add);
+    if((strcmp(path, "") != 0) && (strcmp(name, "") != 0))
+    {
+        aMinuscula(unit);
+        aMinuscula(type);
+        aMinuscula(fit);
+        char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+        strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
+
+        FILE * disco = fopen(pathLimpio, "r+b");
+
+        if(disco != NULL) //EL ARCHIVO SÍ EXISTE
+        {
+            if((strcmp(unit,"k") == 0) || ((strcmp(unit,"m") == 0)) || (strcmp(unit,"b") == 0) || ((strcmp(unit,"") == 0)))
+            {
+                if((strcmp(type,"p") == 0) || ((strcmp(type,"e") == 0)) || (strcmp(type,"l") == 0) || ((strcmp(type,"") == 0)))
+                {
+                    if((strcmp(fit,"bf") == 0) || ((strcmp(fit,"ff") == 0)) || (strcmp(fit,"wf") == 0) || ((strcmp(fit,"") == 0)))
+                    {
+
+                        int unidades = 1024 * atof(size); // unidad por defecto Kilobytes, unidades es el size expresado en bytes
+                        int banderaTamano = 0;
+
+                        if(strcmp(unit,"m") == 0)
+                        {
+                            unidades = 1024 * 1024 * atof(size);
+                            if(atof(size)>=2)
+                            {
+                                banderaTamano = 1;
+                            }
+                        }
+                        else if(strcmp(unit,"b") == 0)
+                        {
+                            unidades = atof(size);
+                            if(atof(size)>=2097152)
+                            {
+                                banderaTamano = 1;
+                            }
+                        }
+                        else
+                        {
+                            if(atof(size)>=2048)
+                            {
+                                banderaTamano = 1;
+                            }
+                        }
+
+                        /** acá un if para ver si se va a eliminar
+                            o si se va a agregar/quitar espacio
+                            o si se va a crear una partición
+                        **/
+
+                        if((strcmp(tdelete,"") == 0) && (strcmp(add,"") == 0)) //significa que se quiere crear una partición
+                        {
+                            if(banderaTamano == 1) //sí cumple con el mínimo de tamaño
+                            {
+                                crearParticion();
+                            }
+                            else
+                            {
+                                printf("\n****El tamaño mínimo de una partición debe ser de 2MB****\n");
+                            }
+                        }
+                        else if((strcmp(tdelete,"") != 0) && (strcmp(add,"") == 0)) //significa que se quiere borrar una partición
+                        {
+                            eliminarParticion();
+                        }
+                        else if((strcmp(tdelete,"") == 0) && (strcmp(add,"") != 0)) //significa que se quiere agregar/quitar tamaño
+                        {
+                            redimensionarParticion();
+                        }
+
+                        fclose(disco);
+
+                    }
+                    else
+                    {
+                        printf("\n****El parámetro +type debe ser \"BF\", \"FF\" o \"WF\"****\n");
+                    }
+                }
+                else
+                {
+                    printf("\n****El parámetro +type debe ser \"P\", \"E\" o \"L\"****\n");
+                }
+            }
+            else
+            {
+                printf("\n****El parámetro +unit debe ser \"B\", \"K\" o \"M\"****\n");
+            }
+        }
+        else
+        {
+            printf("\n****El disco que deseas modificar no existe. Verifica la ruta.****\n");
+        }
+
+
+    }
+    else
+    {
+        printf("\n***Verifica que hayas incluido todos los parámetros obligatorios para el comando fdisk***\n");
+        printf("-size\n");
+        printf("-path\n");
+        printf("-name\n\n");
+    }
+}
+
+//ejecuta el comando "mount"
+void mostrarParticionesMontadas()
+{
+printf("holi desde la lista de particiones :3\n");
 }
 
 //ejecuta el comando "mount"
 void ejecutarMOUNT(char* path, char* name)
 {
-
+printf("holi desde el mount :3\n");
 }
 
 //ejecuta el comando "unmount"
