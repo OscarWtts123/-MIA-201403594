@@ -721,16 +721,90 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                             }
                         }
 
-                        /** acá un if para ver si se va a eliminar
-                            o si se va a agregar/quitar espacio
-                            o si se va a crear una partición
-                        **/
+                        MBR mbr; //LECTURA DEL MBR DEL DISCO Y ALMACENARLO EN RAM
+                        fread (&mbr, sizeof(mbr), 1,disco);
 
                         if((strcmp(tdelete,"") == 0) && (strcmp(add,"") == 0)) //significa que se quiere crear una partición
                         {
                             if(banderaTamano == 1) //sí cumple con el mínimo de tamaño
                             {
 //                                crearParticion();
+                                if(strcmp(type,"") == 0) //crear partición primaria
+                                {
+                                    if((mbr.mbr_particion[0].part_status == 'n') || (mbr.mbr_particion[0].part_status == 'n')
+                                    || (mbr.mbr_particion[0].part_status == 'n') || (mbr.mbr_particion[0].part_status == 'n'))
+                                    {
+                                        if(mbr.mbr_particion[0].part_status == 'n')
+                                        {
+                                        }
+                                        else if(mbr.mbr_particion[1].part_status == 'n')
+                                        {
+                                        }
+                                        else if(mbr.mbr_particion[2].part_status == 'n')
+                                        {
+                                        }
+                                        else if(mbr.mbr_particion[3].part_status == 'n')
+                                        {
+                                        }
+                                    }
+                                    else
+                                    {
+                                        printf("\n\x1B[33m****No se pueden crear más particiones en este disco.****\x1B[0m\n");
+                                    }
+                                }
+                                else if(strcmp(type,"e") == 0) //crear partición extendida
+                                {
+                                    /** REVISAR SI YA EXISTE UNA PARTICIÓN EXTENDIDA **/
+                                    int banderaExtendida = -1;
+
+                                    if(mbr.mbr_particion[0].part_type == 'e')
+                                    {
+                                        banderaExtendida = 0;
+                                    }
+                                    else if(mbr.mbr_particion[1].part_type == 'e')
+                                    {
+                                        banderaExtendida = 1;
+                                    }
+                                    else if(mbr.mbr_particion[2].part_type == 'e')
+                                    {
+                                        banderaExtendida = 2;
+                                    }
+                                    else if(mbr.mbr_particion[3].part_type == 'e')
+                                    {
+                                        banderaExtendida = 3;
+                                    }
+                                }
+                                else if(strcmp(type,"l") == 0) //crear partición logica
+                                {
+                                    /** REVISAR SI YA EXISTE UNA PARTICIÓN EXTENDIDA **/
+                                    int banderaExtendida = -1;
+
+                                    if(mbr.mbr_particion[0].part_type == 'e')
+                                    {
+                                        banderaExtendida = 0;
+                                    }
+                                    else if(mbr.mbr_particion[1].part_type == 'e')
+                                    {
+                                        banderaExtendida = 1;
+                                    }
+                                    else if(mbr.mbr_particion[2].part_type == 'e')
+                                    {
+                                        banderaExtendida = 2;
+                                    }
+                                    else if(mbr.mbr_particion[3].part_type == 'e')
+                                    {
+                                        banderaExtendida = 3;
+                                    }
+
+                                    if(banderaExtendida != -1) //significa que sí hay una partición extendida
+                                    {
+                                        /**Crear partición**/
+                                    }
+                                    else
+                                    {
+                                        printf("\n\x1B[33m****No se puede crear la partición lógica porque no existe una partición extendida****\x1B[0m\n");
+                                    }
+                                }
                             }
                             else
                             {
