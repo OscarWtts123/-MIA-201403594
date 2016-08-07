@@ -248,6 +248,109 @@ void leerComando(char* linea)
     else if(strcmp(comando,"fdisk") == 0)
     {
         casoComando = 3;
+        comando = strtok(NULL, ":");    //elimina el token "fdisk"
+
+        while(comando)                  //este while recorre el comando y lo separa en una
+        {                               //lista de parámetros. Luego de comparar el parámetro separa
+            aMinuscula(comando);        //de la lista por ":" y guardo el contenido en algún lado
+
+            if(strcmp(comando,"-size") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                strcpy(size, aux);
+//                printf("El contenido del comando -size es: %s\n", aux);
+            }
+            else if(strcmp(comando,"+unit") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                strcpy(unit, aux);
+//                printf("El contenido del comando +unit es: %s\n", aux);
+            }
+            else if(strcmp(comando,"-path") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                char auxArray[256];
+                strcpy(auxArray, aux);
+
+                while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                {
+                    comando = strtok(NULL, " ");
+                    strcat(aux, " ");
+                    strcat(aux, comando);
+                    strcpy(auxArray,aux);
+                }
+
+                strcpy(path, aux);
+//                printf("El contenido del comando -path es: %s\n", aux);
+            }
+            else if(strcmp(comando,"+type") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                strcpy(type, aux);
+//                printf("El contenido del comando +unit es: %s\n", aux);
+            }
+            else if(strcmp(comando,"+fit") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                strcpy(fit, aux);
+//                printf("El contenido del comando +unit es: %s\n", aux);
+            }
+            else if(strcmp(comando,"+delete") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                strcpy(tdelete, aux);
+//                printf("El contenido del comando +unit es: %s\n", aux);
+            }
+            else if(strcmp(comando,"-name") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                char auxArray[256];
+                strcpy(auxArray, aux);
+
+                while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                {
+                    comando = strtok(NULL, " ");
+                    strcat(aux, " ");
+                    strcat(aux, comando);
+                    strcpy(auxArray,aux);
+                }
+
+                strcpy(name, aux);
+//                printf("El contenido del comando -name es: %s\n", aux);
+            }
+            else if(strcmp(comando,"+add") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                strcpy(add, aux);
+//                printf("El contenido del comando +unit es: %s\n", aux);
+            }
+            else
+            {
+                char aux[30];
+                strcpy(aux,comando);
+                comando = strtok(NULL, " ");
+                printf("****El parámetro \"%s\" no es válido****\n",aux);
+            }
+
+            comando = strtok(NULL, ":");
+        }
+        ejecutarFDISK(size,unit,path,type,fit,tdelete,name,add);
     }
     else if(strcmp(comando,"mount") == 0)
     {
@@ -278,11 +381,11 @@ void ejecutarEXEC(char* path)
         char *linea = malloc(500);
         printf("\n");
 
-        while(fgets(linea,300,script) != NULL)
+        while(fgets(linea,500,script) != NULL)
         {
             if(strcmp(linea,"\n")!=0)
             {
-                char lineaLimpia [300];
+                char lineaLimpia [500];
                 strcpy(lineaLimpia,"");
                 strcpy(lineaLimpia,linea);
 
@@ -297,8 +400,8 @@ void ejecutarEXEC(char* path)
                     {
                         lineaLimpia[strlen(lineaLimpia) -1] = '\0';
 
-                        char nuevaLinea[300];
-                        fgets(nuevaLinea,300,script);
+                        char nuevaLinea[500];
+                        fgets(nuevaLinea,500,script);
                         strcat(lineaLimpia, nuevaLinea);
                         if(lineaLimpia[strlen(lineaLimpia) -1] =='\n')
                         {
@@ -311,6 +414,10 @@ void ejecutarEXEC(char* path)
                 }
                 else
                 {
+                    if(lineaLimpia[strlen(lineaLimpia) -1] =='\n')
+                    {
+                        lineaLimpia[strlen(lineaLimpia) -1] = '\0';
+                    }
                     printf("\n%s",lineaLimpia);
                 }
 
@@ -335,7 +442,7 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
         int sizeDouble = atof(size);       //convierte "size" a un entero para poder hacer validaciones
         aMinuscula(unit);
 
-        if(sizeDouble > 0)
+        if(sizeDouble >= 0)
         {
             if((strcmp(unit,"k") == 0) || ((strcmp(unit,"m") == 0)) || ((strcmp(unit,"") == 0)))
             {
@@ -344,83 +451,109 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
 
                 if(strcasecmp(extension,".dsk\"") == 0)
                 {
-                    //quitar las comillas del path y name y concaternarlos
-                    char* nameLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
-                    strncpy(nameLimpio,name+1,strlen(name)-2); //-2 porque toma en cuenta las 2 comillas
-
-                    char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
-                    strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
-
-                    //crear el directorio si no existe
-                    char crearDirectorio[100] = "mkdir -p ";
-                    strcat(crearDirectorio, path);
-                    system(crearDirectorio);
 
                     int unidades = 1024 * 1024 * atof(size); // unidad por defecto Megabytes
+                    int banderaTamano = 0;
 
                     if(strcmp(unit,"k") == 0)
                     {
                         unidades = 1024 * atof(size);
+                        if(atof(size)>=10240)
+                        {
+                            banderaTamano = 1;
+                        }
                     }
-
-/**
-por acá debería crear el mbr e inicializarlo
-para luego sumarle el espacio que ocupa
-al espacio total del disco
-**/
-                    MBR mbr;
-                    time_t tiempo = time(0);                                            //esta parte guarda la hora
-                    struct tm *tlocal = localtime(&tiempo);                             //y fecha actual del sistema
-                    strftime(mbr.mbr_fecha_creacion,128,"%d/%m/%y %H:%M:%S",tlocal);    //para la creación del disco
-
-                    mbr.mbr_tamano = unidades;
-                    srand(time(NULL));                      //toma el tiempo como semilla para iniciar el random
-                    mbr.mbr_disk_signature = rand();
-                    mbr.mbr_particion[0].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
-                    mbr.mbr_particion[1].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
-                    mbr.mbr_particion[2].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
-                    mbr.mbr_particion[3].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
-
-                    //inicializa el disco con \0
-                    char* ruta = malloc(strlen("solo quiero ocupar espacio :v") + 100);
-                    strcpy(ruta,"");
-                    strcat(ruta, pathLimpio);
-                    strcat(ruta, nameLimpio);
-                    FILE *disco = fopen (ruta, "w+b"); //abro y creo el archivo aquí, para tener control del puntero antes de comenzar
-                                                        //a llenar de ceros
-
-                    char llenarDisco[100] = "dd if=/dev/zero of='";
-                    strcat(llenarDisco, pathLimpio);
-                    strcat(llenarDisco, nameLimpio);
-                    strcat(llenarDisco, "' bs=");
-                    char* unidadesChar = malloc(strlen("solo quiero ocupar espacio :v") + 1);
-/**este le hace
-espacio al mbr**/   //sprintf(unidadesChar, "%d", unidades + sizeof(mbr));
-
-/**este toma espacio
-del disco para
-el mbr**/           sprintf(unidadesChar, "%d", unidades);
-
-                    /**por el momento, le quito espacio al disco para almacenar el mbr**/
-
-                    strcat(llenarDisco, unidadesChar);
-                    strcat(llenarDisco, " count=1");
-                    system(llenarDisco);
-
-                    //escribe el mbr en el disco
-                    if(disco == NULL)
+                    else
                     {
-                        printf("esta charada no sirve\n");
-                        printf("%s\n",ruta);
-                        printf("%s\n",pathLimpio);
-                        printf("%s\n",nameLimpio);
+                        if(atof(size)>=10)
+                        {
+                            banderaTamano = 1;
+                        }
                     }
-                    fseek(disco,0,SEEK_SET);
-                    fwrite(&mbr,sizeof(mbr),1,disco);
-                    fclose(disco);
+//((strcmp(unit,"k") == 0) && (size >= 10240 )) || ((strcmp(unit,"m") == 0) && (size >= 10 ))
+                    if(banderaTamano == 1)
+                    {
+                        //quitar las comillas del path y name y concaternarlos
+                        char* nameLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                        strncpy(nameLimpio,name+1,strlen(name)-2); //-2 porque toma en cuenta las 2 comillas
 
-                    printf("\n****¡Disco creado con éxito!****\n");
+                        char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                        strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
 
+                        //crear el directorio si no existe
+                        char crearDirectorio[100] = "mkdir -p ";
+                        strcat(crearDirectorio, path);
+                        system(crearDirectorio);
+
+//                        int unidades = 1024 * 1024 * atof(size); // unidad por defecto Megabytes
+//
+//                        if(strcmp(unit,"k") == 0)
+//                        {
+//                            unidades = 1024 * atof(size);
+//                        }
+
+    /**
+    por acá debería crear el mbr e inicializarlo
+    para luego sumarle el espacio que ocupa
+    al espacio total del disco
+    **/
+                        MBR mbr;
+                        time_t tiempo = time(0);                                            //esta parte guarda la hora
+                        struct tm *tlocal = localtime(&tiempo);                             //y fecha actual del sistema
+                        strftime(mbr.mbr_fecha_creacion,128,"%d/%m/%y %H:%M:%S",tlocal);    //para la creación del disco
+
+                        mbr.mbr_tamano = unidades;
+                        srand(time(NULL));                      //toma el tiempo como semilla para iniciar el random
+                        mbr.mbr_disk_signature = rand();
+                        mbr.mbr_particion[0].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
+                        mbr.mbr_particion[1].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
+                        mbr.mbr_particion[2].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
+                        mbr.mbr_particion[3].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
+
+                        //inicializa el disco con \0
+                        char* ruta = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                        strcpy(ruta,"");
+                        strcat(ruta, pathLimpio);
+                        strcat(ruta, nameLimpio);
+                        FILE *disco = fopen (ruta, "w+b"); //abro y creo el archivo aquí, para tener control del puntero antes de comenzar
+                                                            //a llenar de ceros
+
+                        char llenarDisco[100] = "dd if=/dev/zero of='";
+                        strcat(llenarDisco, pathLimpio);
+                        strcat(llenarDisco, nameLimpio);
+                        strcat(llenarDisco, "' bs=");
+                        char* unidadesChar = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+    /**este le hace
+    espacio al mbr**/   //sprintf(unidadesChar, "%d", unidades + sizeof(mbr));
+
+    /**este toma espacio
+    del disco para
+    el mbr**/           sprintf(unidadesChar, "%d", unidades);
+
+                        /**por el momento, le quito espacio al disco para almacenar el mbr**/
+
+                        strcat(llenarDisco, unidadesChar);
+                        strcat(llenarDisco, " count=1");
+                        system(llenarDisco);
+
+                        //escribe el mbr en el disco
+                        if(disco == NULL)
+                        {
+                            printf("esta charada no sirve\n");
+                            printf("%s\n",ruta);
+                            printf("%s\n",pathLimpio);
+                            printf("%s\n",nameLimpio);
+                        }
+                        fseek(disco,0,SEEK_SET);
+                        fwrite(&mbr,sizeof(mbr),1,disco);
+                        fclose(disco);
+
+                        printf("\n****¡Disco creado con éxito!****\n");
+                    }
+                    else
+                    {
+                        printf("\n****El tamaño mínimo de un disco debe ser de 10MB****\n");
+                    }
                 }
                 else
                 {
@@ -479,7 +612,14 @@ void ejecutarRMDISK(char* path)
 //ejecuta el comando "fdisk"
 void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, char* tdelete, char* name, char* add)
 {
-
+    printf("size: %s\n", size);
+    printf("unit: %s\n", unit);
+    printf("path: %s\n", path);
+    printf("type: %s\n", type);
+    printf("fit: %s\n", fit);
+    printf("tdelete: %s\n", tdelete);
+    printf("name: %s\n", name);
+    printf("add: %s\n", add);
 }
 
 //ejecuta el comando "mount"
