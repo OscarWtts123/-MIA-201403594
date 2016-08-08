@@ -4,6 +4,11 @@
 #include <ctype.h>
 #include "structs.h"
 
+char particionesMontadas [50][50][256] = {""}; //una tabla de 50 * 50, que almacena strings de 256 caracteres
+//lista de letras disponibles para usar como id de disco
+char identificadores [26] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+
+
 int main()
 {
     char comando[256];
@@ -762,6 +767,8 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                                 mbr.mbr_particion[0].part_size = unidades;
                                                 mbr.mbr_particion[0].part_type = 'p';
                                                 mbr.mbr_particion[0].part_fit = fitPart;
+
+                                                printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                             }
                                             else
                                             {
@@ -784,6 +791,8 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                                     mbr.mbr_particion[1].part_size = unidades;
                                                     mbr.mbr_particion[1].part_type = 'p';
                                                     mbr.mbr_particion[1].part_fit = fitPart;
+
+                                                    printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                                 }
                                                 else
                                                 {
@@ -812,6 +821,8 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                                     mbr.mbr_particion[2].part_size = unidades;
                                                     mbr.mbr_particion[2].part_type = 'p';
                                                     mbr.mbr_particion[2].part_fit = fitPart;
+
+                                                    printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                                 }
                                                 else
                                                 {
@@ -842,7 +853,7 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                                     mbr.mbr_particion[3].part_type = 'p';
                                                     mbr.mbr_particion[3].part_fit = fitPart;
 
-                                                    printf("\n\x1B[33m****¡La partición primaria se ha creado con éxito!****\x1B[0m\n");
+                                                    printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                                 }
                                                 else
                                                 {
@@ -968,16 +979,99 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
     }
 }
 
-//ejecuta el comando "mount"
+//imprime la lista de particiones montadas
 void mostrarParticionesMontadas()
 {
-printf("holi desde la lista de particiones :3\n");
+
+}
+
+//asigna identificadores a las particiones montadas
+void asignarIdentificador(char *id, char *pathLimpio, char *nameLimpio)
+{
+    int disco = 0;
+    int particion = 1;
+    char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+
+    while(disco < 50) //almacena hasta el índice 49 (50 discos)
+    {
+        if((strcmp(particionesMontadas[disco][0] ,pathLimpio)==0)||(strcmp(particionesMontadas[disco][0] ,"")==0)){
+            strcpy(particionesMontadas[disco][0],pathLimpio);
+            while ((strcmp(particionesMontadas[disco][particion] ,"")!=0)&&(strcmp(particionesMontadas[disco][particion] ,nameLimpio)!=0)){
+                particion++;
+            }
+            strcpy(particionesMontadas[disco][particion] ,nameLimpio);
+            sprintf(aux, "vd%c%d",identificadores[disco], particion);
+            strcpy(id, aux);
+            break;
+        }
+        disco++;
+    }
 }
 
 //ejecuta el comando "mount"
 void ejecutarMOUNT(char* path, char* name)
 {
-printf("holi desde el mount :3\n");
+
+    char* nameLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+    strncpy(nameLimpio,name+1,strlen(name)-2); //-2 porque toma en cuenta las 2 comillas
+
+    char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+    strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
+
+    FILE * disco = fopen(pathLimpio, "r+b");
+
+    if(disco != NULL) //EL ARCHIVO SÍ EXISTE
+    {
+        char* id = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+        strcpy(id,"vd"); //el char* id ya tiene "vd" para después agregarle el identificador de disco y partición
+
+        MBR mbr; //LECTURA DEL MBR DEL DISCO Y ALMACENARLO EN RAM
+        fread (&mbr, sizeof(mbr), 1,disco);
+        fclose(disco);
+
+        int indiceParticion = -1;
+
+        if(strcmp(mbr.mbr_particion[0].part_name, nameLimpio) == 0)
+        {
+            indiceParticion = 0;
+        }
+        else if(strcmp(mbr.mbr_particion[1].part_name, nameLimpio) == 0)
+        {
+            indiceParticion = 1;
+        }
+        else if(strcmp(mbr.mbr_particion[2].part_name, nameLimpio) == 0)
+        {
+            indiceParticion = 2;
+        }
+        else if(strcmp(mbr.mbr_particion[3].part_name, nameLimpio) == 0)
+        {
+            indiceParticion = 3;
+        }
+        else
+        {
+            /** SI EL NOMBRE NO ES DE UNA DE LAS PARTICIONES PRIMARIAS O EXTENDIDAS
+                ENTONCES ES DE UNA DE LAS PARTICIONES LÓGICAS. AQUÍ DEBERÍA IR A BUSCAR
+                SI EXISTE UNA PARTICIÓN EXTENDIDA, SINO EXISTE ES ERROR (-1). LUEGO ENCONTRAR EL
+                EBR, IR COMPARANDO LOS NOMBRES DE LAS PARTICIONES LÓGICAS, Y SINO EXISTE
+                ES ERROR (-1)**/
+                printf("\n\x1B[31m****Me quedé trabado en el else****\x1B[0m\n");
+        }
+
+        if(indiceParticion != -1) //sí encontró el nombre
+        {
+            asignarIdentificador(id, pathLimpio, nameLimpio);
+            printf("\n\x1B[33m****¡La partición se montó exitosamente! El id de la partición %s es: %s.****\x1B[0m\n", name,id);
+        }
+        else
+        {
+            printf("\n\x1B[33m****La partición que deseas montar no existe. Verifica el nombre.****\x1B[0m\n");
+        }
+
+    }
+    else
+    {
+        printf("\n\x1B[33m****El disco que deseas montar no existe. Verifica la ruta.****\x1B[0m\n");
+    }
 }
 
 //ejecuta el comando "unmount"
