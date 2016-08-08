@@ -85,7 +85,6 @@ void leerComando(char* linea)
     char fit[256] = "";
     char tdelete[256] = "";
     char add[256] = "";
-    char id[256] = "";
 
     //casoComando 0: exec
     //casoComando 1: mkdisk
@@ -423,9 +422,38 @@ void leerComando(char* linea)
             ejecutarMOUNT(path, name);
         }
     }
-    else if(strcmp(comando,"unmount:") == 0)
+    else if(strcmp(comando,"unmount") == 0)
     {
         casoComando = 5;
+        comando = strtok(NULL, ":");    //elimina el token "unomunt"
+        int indice = 0;
+        char* idIndice = malloc(strlen("solo quiero ocupar espacio :v") + 50);
+
+        while(comando)                  //este while recorre el comando y lo separa en una
+        {                               //lista de parámetros. Luego de comparar el parámetro separa
+            aMinuscula(comando);        //de la lista por ":" y guardo el contenido en algún lado
+            indice++;
+            strcpy(idIndice,"");
+            sprintf(idIndice, "-id%d", indice);
+
+            if(strcmp(comando,idIndice) == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                ejecutarUNMOUNT(aux); //le va mandando uno por uno los identificadores
+//                printf("El contenido del comando -size es: %s\n", aux);
+            }
+            else
+            {
+                char aux[30];
+                strcpy(aux,comando);
+                comando = strtok(NULL, " ");
+                printf("\x1B[33m****El parámetro \"%s\" no es válido****\x1B[0m\n",aux);
+            }
+
+            comando = strtok(NULL, ":");
+        }
     }
     else
     {
@@ -982,7 +1010,33 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
 //imprime la lista de particiones montadas
 void mostrarParticionesMontadas()
 {
+    int disco = 0;
+    int particion = 1;
+    int banderaVacio = 0;
 
+    for(disco = 0; disco < 50; disco++)
+    {
+        if(strcmp(particionesMontadas[disco][0], "") != 0)
+        {
+            for(particion = 1; particion < 50; particion++)
+            {
+                if(strcmp(particionesMontadas[disco][particion], "") != 0)
+                {
+                    banderaVacio = 1;
+                    printf("\x1B[32m# \x1B[34mid\x1B[32m::\x1B[35mvd%c%d \x1B[34m-path\x1B[32m::\x1B[35m\"%s\" \x1B[34m-name\x1B[32m::\x1B[35m\"%s\"\x1B[0m\n", identificadores[disco], particion, particionesMontadas[disco][0],particionesMontadas[disco][particion]);
+                }
+            }
+        }
+    }
+
+    if(banderaVacio != 0) //sí habían particiones montadas
+    {
+        printf("\n");
+    }
+    else
+    {
+        printf("\n\x1B[33m****No hay particiones montadas.****\x1B[0m\n");
+    }
 }
 
 //asigna identificadores a las particiones montadas
@@ -996,9 +1050,20 @@ void asignarIdentificador(char *id, char *pathLimpio, char *nameLimpio)
     {
         if((strcmp(particionesMontadas[disco][0] ,pathLimpio)==0)||(strcmp(particionesMontadas[disco][0] ,"")==0)){
             strcpy(particionesMontadas[disco][0],pathLimpio);
+
             while ((strcmp(particionesMontadas[disco][particion] ,"")!=0)&&(strcmp(particionesMontadas[disco][particion] ,nameLimpio)!=0)){
                 particion++;
             }
+
+            if(strcmp(particionesMontadas[disco][particion] ,nameLimpio) == 0)
+            {
+                printf("\n\x1B[31m****Esta partición ya fue montada previamente.****\x1B[0m\n");
+            }
+            else
+            {
+                printf("\n\x1B[33m****¡La partición se montó exitosamente! El id de la partición \"%s\" es: vd%c%d.****\x1B[0m\n", nameLimpio,identificadores[disco], particion);
+            }
+
             strcpy(particionesMontadas[disco][particion] ,nameLimpio);
             sprintf(aux, "vd%c%d",identificadores[disco], particion);
             strcpy(id, aux);
@@ -1054,13 +1119,13 @@ void ejecutarMOUNT(char* path, char* name)
                 SI EXISTE UNA PARTICIÓN EXTENDIDA, SINO EXISTE ES ERROR (-1). LUEGO ENCONTRAR EL
                 EBR, IR COMPARANDO LOS NOMBRES DE LAS PARTICIONES LÓGICAS, Y SINO EXISTE
                 ES ERROR (-1)**/
-                printf("\n\x1B[31m****Me quedé trabado en el else****\x1B[0m\n");
+                printf("\n\x1B[31m****Me quedé trabado en el else de la extendida****\x1B[0m\n");
         }
 
         if(indiceParticion != -1) //sí encontró el nombre
         {
             asignarIdentificador(id, pathLimpio, nameLimpio);
-            printf("\n\x1B[33m****¡La partición se montó exitosamente! El id de la partición %s es: %s.****\x1B[0m\n", name,id);
+            //el mensaje de montado existoso está en el método
         }
         else
         {
@@ -1077,5 +1142,47 @@ void ejecutarMOUNT(char* path, char* name)
 //ejecuta el comando "unmount"
 void ejecutarUNMOUNT(char* id)
 {
+    char *idDisco = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+    strncpy(idDisco,id+2,1);
+    char *idParticion = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+    strncpy(idParticion,id+3,1);
+
+    int disco = 0;
+    int particion = 0;
+    char *valoresLetras = "abcdefghijklmnopqrstuvwxyz";
+
+    particion = atof(idParticion);
+
+    char* punteroLetra = strchr(valoresLetras,*idDisco);
+    disco = punteroLetra - valoresLetras;
+
+    if(strcmp(particionesMontadas[disco][particion],"") != 0)
+    {
+        strcpy(particionesMontadas[disco][particion],""); //se desmonta la partición
+
+        int iterador = 0;
+        int banderaColumnaVacia = 0;
+
+        while(iterador < 50)
+        {
+            if(particionesMontadas[disco][iterador]) //verifica que la columna del disco todavía tenga particiones montadas
+            {
+                banderaColumnaVacia = 1;
+                break;
+            }
+            iterador++;
+        }
+
+        if(banderaColumnaVacia == 0) //ya no hay particiones
+        {
+            strcpy(particionesMontadas[disco][0],"");
+        }
+        printf("\n\x1B[33m****Se ha desmontado correctamente la partición con id: %s***\x1B[0m\n",id);
+    }
+    else
+    {
+        printf("\n\x1B[33m****No existe una partición montada con el id: %s***\x1B[0m\n",id);
+    }
+
 
 }
