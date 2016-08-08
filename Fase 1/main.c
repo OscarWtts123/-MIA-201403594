@@ -564,7 +564,7 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
                         struct tm *tlocal = localtime(&tiempo);                             //y fecha actual del sistema
                         strftime(mbr.mbr_fecha_creacion,128,"%d/%m/%y %H:%M:%S",tlocal);    //para la creación del disco
 
-                        mbr.mbr_tamano = unidades;
+                        mbr.mbr_tamano = unidades + sizeof(mbr);
                         srand(time(NULL));                      //toma el tiempo como semilla para iniciar el random
                         mbr.mbr_disk_signature = rand();
                         mbr.mbr_particion[0].part_status = 'n'; // "n" indica que no está usada, "y" indica lo contrario
@@ -586,13 +586,13 @@ void ejecutarMKDISK(char* size, char* unit, char* path, char* name)
                         strcat(llenarDisco, "' bs=");
                         char* unidadesChar = malloc(strlen("solo quiero ocupar espacio :v") + 1);
     /**este le hace
-    espacio al mbr**/   //sprintf(unidadesChar, "%d", unidades + sizeof(mbr));
+    espacio al mbr**/   sprintf(unidadesChar, "%d", unidades + sizeof(mbr));
 
     /**este toma espacio
     del disco para
-    el mbr**/           sprintf(unidadesChar, "%d", unidades);
+    el mbr**/           //sprintf(unidadesChar, "%d", unidades);
 
-                        /**por el momento, le quito espacio al disco para almacenar el mbr**/
+                        /**por el momento, le creo espacio aparte al disco para almacenar el mbr**/
 
                         strcat(llenarDisco, unidadesChar);
                         strcat(llenarDisco, " count=1");
@@ -683,6 +683,9 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
         char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
         strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
 
+        char* nameLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+        strncpy(nameLimpio,name+1,strlen(name)-2); //-2 porque toma en cuenta las 2 comillas
+
         FILE * disco = fopen(pathLimpio, "r+b");
 
         if(disco != NULL) //EL ARCHIVO SÍ EXISTE
@@ -693,6 +696,16 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                 {
                     if((strcmp(fit,"bf") == 0) || ((strcmp(fit,"ff") == 0)) || (strcmp(fit,"wf") == 0) || ((strcmp(fit,"") == 0)))
                     {
+                        char fitPart = 'w'; //fit por defecto
+
+                        if(strcmp(fit,"bf") == 0)
+                        {
+                            fitPart = 'b';
+                        }
+                        else if(strcmp(fit,"ff") == 0)
+                        {
+                            fitPart = 'f';
+                        }
 
                         int unidades = 1024 * atof(size); // unidad por defecto Kilobytes, unidades es el size expresado en bytes
                         int banderaTamano = 0;
@@ -728,23 +741,122 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                         {
                             if(banderaTamano == 1) //sí cumple con el mínimo de tamaño
                             {
-//                                crearParticion();
-                                if(strcmp(type,"") == 0) //crear partición primaria
+                                if((strcmp(type,"p") == 0) || (strcmp(type,"") == 0)) //crear partición primaria
                                 {
-                                    if((mbr.mbr_particion[0].part_status == 'n') || (mbr.mbr_particion[0].part_status == 'n')
-                                    || (mbr.mbr_particion[0].part_status == 'n') || (mbr.mbr_particion[0].part_status == 'n'))
+                                    if((mbr.mbr_particion[0].part_status == 'n') || (mbr.mbr_particion[1].part_status == 'n')
+                                    || (mbr.mbr_particion[2].part_status == 'n') || (mbr.mbr_particion[3].part_status == 'n'))
                                     {
+                                        int indiceParticion = -1;
+
                                         if(mbr.mbr_particion[0].part_status == 'n')
                                         {
+                                            //indiceParticion = 0;
+                                            int inicioEspacioLibre = sizeof(mbr); //desde donde termina el MBR
+                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
+
+                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+                                            {
+                                                strcpy(mbr.mbr_particion[0].part_name, nameLimpio);
+                                                mbr.mbr_particion[0].part_start = inicioEspacioLibre;
+                                                mbr.mbr_particion[0].part_status = 'y';
+                                                mbr.mbr_particion[0].part_size = unidades;
+                                                mbr.mbr_particion[0].part_type = 'p';
+                                                mbr.mbr_particion[0].part_fit = fitPart;
+                                            }
+                                            else
+                                            {
+                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
+                                            }
                                         }
                                         else if(mbr.mbr_particion[1].part_status == 'n')
                                         {
+                                            indiceParticion = 1;
+                                            int inicioEspacioLibre = mbr.mbr_particion[0].part_start +  mbr.mbr_particion[0].part_size;//desde donde termina el MBR
+                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
+
+                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+                                            {
+                                                if(strcmp(mbr.mbr_particion[0].part_name, nameLimpio) != 0) //el nombre no existe
+                                                {
+                                                    strcpy(mbr.mbr_particion[1].part_name, nameLimpio);
+                                                    mbr.mbr_particion[1].part_start = inicioEspacioLibre;
+                                                    mbr.mbr_particion[1].part_status = 'y';
+                                                    mbr.mbr_particion[1].part_size = unidades;
+                                                    mbr.mbr_particion[1].part_type = 'p';
+                                                    mbr.mbr_particion[1].part_fit = fitPart;
+                                                }
+                                                else
+                                                {
+                                                    printf("\n\x1B[33m****Ya existe una partición con ese nombre.****\x1B[0m\n");
+                                                }
+                                            }
+                                            else
+                                            {
+                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
+                                            }
                                         }
                                         else if(mbr.mbr_particion[2].part_status == 'n')
                                         {
+                                            indiceParticion = 2;
+                                            int inicioEspacioLibre = mbr.mbr_particion[1].part_start +  mbr.mbr_particion[1].part_size ;//desde donde termina el MBR
+                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
+
+                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+                                            {
+                                                if((strcmp(mbr.mbr_particion[0].part_name, nameLimpio) != 0) &&
+                                                   (strcmp(mbr.mbr_particion[1].part_name, nameLimpio) != 0)) //el nombre no existe
+                                                {
+                                                    strcpy(mbr.mbr_particion[2].part_name, nameLimpio);
+                                                    mbr.mbr_particion[2].part_start = inicioEspacioLibre;
+                                                    mbr.mbr_particion[2].part_status = 'y';
+                                                    mbr.mbr_particion[2].part_size = unidades;
+                                                    mbr.mbr_particion[2].part_type = 'p';
+                                                    mbr.mbr_particion[2].part_fit = fitPart;
+                                                }
+                                                else
+                                                {
+                                                    printf("\n\x1B[33m****Ya existe una partición con ese nombre.****\x1B[0m\n");
+                                                }
+                                            }
+                                            else
+                                            {
+                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
+                                            }
                                         }
                                         else if(mbr.mbr_particion[3].part_status == 'n')
                                         {
+                                            indiceParticion = 3;
+                                            int inicioEspacioLibre = mbr.mbr_particion[2].part_start +  mbr.mbr_particion[2].part_size; //desde donde termina el MBR
+                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
+
+                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+                                            {
+                                                if((strcmp(mbr.mbr_particion[0].part_name, nameLimpio) != 0) &&
+                                                   (strcmp(mbr.mbr_particion[1].part_name, nameLimpio) != 0) &&
+                                                   (strcmp(mbr.mbr_particion[2].part_name, nameLimpio) != 0)) //el nombre no existe
+                                                {
+                                                    strcpy(mbr.mbr_particion[3].part_name, nameLimpio);
+                                                    mbr.mbr_particion[3].part_start = inicioEspacioLibre;
+                                                    mbr.mbr_particion[3].part_status = 'y';
+                                                    mbr.mbr_particion[3].part_size = unidades;
+                                                    mbr.mbr_particion[3].part_type = 'p';
+                                                    mbr.mbr_particion[3].part_fit = fitPart;
+
+                                                    printf("\n\x1B[33m****¡La partición primaria se ha creado con éxito!****\x1B[0m\n");
+                                                }
+                                                else
+                                                {
+                                                    printf("\n\x1B[33m****Ya existe una partición con ese nombre.****\x1B[0m\n");
+                                                }
+                                            }
+                                            else
+                                            {
+                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            printf("\n\x1B[33m****No se que pasa.****\x1B[0m\n");
                                         }
                                     }
                                     else
@@ -820,6 +932,8 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
 //                            redimensionarParticion();
                         }
 
+                        fseek(disco,0,SEEK_SET);
+                        fwrite(&mbr,sizeof(mbr),1,disco);
                         fclose(disco);
 
                     }
