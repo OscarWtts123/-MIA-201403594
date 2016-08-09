@@ -85,6 +85,8 @@ void leerComando(char* linea)
     char fit[256] = "";
     char tdelete[256] = "";
     char add[256] = "";
+    char id[10] = "";
+    char ruta[256] = "";
 
     //casoComando 0: exec
     //casoComando 1: mkdisk
@@ -454,6 +456,79 @@ void leerComando(char* linea)
 
             comando = strtok(NULL, ":");
         }
+    }
+    else if(strcmp(comando,"rep") == 0)
+    {
+        casoComando = 6;
+        comando = strtok(NULL, ":");    //elimina el token "rep"
+
+        while(comando)                  //este while recorre el comando y lo separa en una
+        {                               //lista de parámetros. Luego de comparar el parámetro separa
+            aMinuscula(comando);        //de la lista por ":" y guardo el contenido en algún lado
+
+            if(strcmp(comando,"-path") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                char auxArray[256];
+                strcpy(auxArray, aux);
+
+                while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                {
+                    comando = strtok(NULL, " ");
+                    strcat(aux, " ");
+                    strcat(aux, comando);
+                    strcpy(auxArray,aux);
+                }
+
+                strcpy(path, aux);
+    //                printf("El contenido del comando -path es: %s\n", aux);
+            }
+            else if(strcmp(comando,"-name") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                strcpy(name, aux);
+            }
+            else if(strcmp(comando,"-id") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                strcpy(id, aux);
+            }
+            else if(strcmp(comando,"+ruta") == 0)
+            {
+                comando = strtok(NULL, " ");
+                char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                char auxArray[256];
+                strcpy(auxArray, aux);
+
+                while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                {
+                    comando = strtok(NULL, " ");
+                    strcat(aux, " ");
+                    strcat(aux, comando);
+                    strcpy(auxArray,aux);
+                }
+
+                strcpy(ruta, aux);
+    //                printf("El contenido del comando -path es: %s\n", aux);
+            }
+            else
+            {
+                char aux[30];
+                strcpy(aux,comando);
+                comando = strtok(NULL, " ");
+                printf("\x1B[33m****El parámetro \"%s\" no es válido****\x1B[0m\n",aux);
+            }
+
+            comando = strtok(NULL, ":");
+        }
+        ejecutarREP(name,path,id,ruta);
     }
     else
     {
@@ -1198,6 +1273,95 @@ void ejecutarUNMOUNT(char* id)
     {
         printf("\n\x1B[33m****No existe una partición montada con el id: %s****\x1B[0m\n",id);
     }
+}
 
+//ejecuta el reporte solicitado
+ejecutarREP(char *name, char *path, char *id, char *ruta)
+{
+    aMinuscula(name);
 
+    if((strcmp(name, "") != 0) && (strcmp(path, "") != 0) && (strcmp(id, "") != 0))
+    {
+
+        char *idDisco = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+        strncpy(idDisco,id+2,1);
+        char *idParticion = malloc(strlen("solo quiero ocupar espacio :v") + 1);
+        strncpy(idParticion,id+3,1);
+
+        int disco = 0;
+        int particion = 0;
+        char *valoresLetras = "abcdefghijklmnopqrstuvwxyz";
+
+        particion = atof(idParticion);
+
+        char* punteroLetra = strchr(valoresLetras,*idDisco);
+        disco = punteroLetra - valoresLetras;
+
+        if(strcmp(particionesMontadas[disco][particion],"") != 0) //no existe la partición solicitada
+        {
+            if(strcmp(name,"mbr") == 0)
+            {
+
+            }
+            else if(strcmp(name,"disk") == 0)
+            {
+
+            }
+            else if(strcmp(name,"inode") == 0)
+            {
+
+            }
+            else if(strcmp(name,"journaling") == 0)
+            {
+
+            }
+            else if(strcmp(name,"block") == 0)
+            {
+
+            }
+            else if(strcmp(name,"bm_inode") == 0)
+            {
+
+            }
+            else if(strcmp(name,"bm_block") == 0)
+            {
+
+            }
+            else if(strcmp(name,"tree") == 0)
+            {
+
+            }
+            else if(strcmp(name,"sb") == 0)
+            {
+
+            }
+            else if(strcmp(name,"file") == 0)
+            {
+
+            }
+            else if(strcmp(name,"ls+i") == 0)
+            {
+
+            }
+            else if(strcmp(name,"ls+l") == 0)
+            {
+
+            }
+            else
+            {
+                printf("\n\x1B[33m****No existe un reporte llamado: \"%s\"****\x1B[0m\n",name);
+            }
+        }
+        else
+        {
+            printf("\n\x1B[33m****No existe una partición montada con el id: %s****\x1B[0m\n",id);
+        }
+    }
+    else
+    {
+        printf("\n\x1B[33m***Verifica que hayas incluido todos los parámetros obligatorios para el comando rep***\n");
+        printf("-name\x1B[0m\n");
+        printf("-path\x1B[0m\n");
+        printf("-id\x1B[0m\n\n");
+    }
 }
