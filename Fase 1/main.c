@@ -1276,7 +1276,7 @@ void ejecutarUNMOUNT(char* id)
 }
 
 //ejecuta el reporte solicitado
-ejecutarREP(char *name, char *path, char *id, char *ruta)
+void ejecutarREP(char *name, char *path, char *id, char *ruta)
 {
     aMinuscula(name);
 
@@ -1297,11 +1297,21 @@ ejecutarREP(char *name, char *path, char *id, char *ruta)
         char* punteroLetra = strchr(valoresLetras,*idDisco);
         disco = punteroLetra - valoresLetras;
 
+        char * archivo = strrchr(path,'/');
+        char directorio [256];
+        int tamano = strlen(path) - strlen(archivo);
+        strncpy(directorio, path, tamano);
+        strcat(directorio, "\"");
+
+        char crearDirectorio[256] = "mkdir -p ";
+        strcat(crearDirectorio, directorio);
+        system(crearDirectorio);
+
         if(strcmp(particionesMontadas[disco][particion],"") != 0) //no existe la partición solicitada
         {
             if(strcmp(name,"mbr") == 0)
             {
-
+                reporteMBR(path, particionesMontadas[disco][0], particionesMontadas[disco][particion]);
             }
             else if(strcmp(name,"disk") == 0)
             {
@@ -1364,4 +1374,98 @@ ejecutarREP(char *name, char *path, char *id, char *ruta)
         printf("-path\x1B[0m\n");
         printf("-id\x1B[0m\n\n");
     }
+}
+
+//reporte MBR
+void reporteMBR(char *path, char *rutaDisco, char *nombreParticion)
+{
+    FILE *disco = fopen (rutaDisco, "r+b");
+    FILE *reporte = fopen ( "/home/dacore/Escritorio/ReporteMBR.dot", "w" );
+
+    MBR mbr;
+    fread (&mbr, sizeof(mbr), 1,disco);
+
+    fprintf ( reporte, "digraph \"ReporteMBR\" {\n");
+    fprintf ( reporte, "node [shape=plaintext]\n");
+    fprintf ( reporte, "nodoMbr [fontname=\"ubuntu\",label=<<table border=\"0\" cellborder=\"1\" cellspacing=\"0\">\n");
+    fprintf ( reporte, "<tr><td colspan=\"2\"><b>%s</b></td></tr>\n", rutaDisco);
+    fprintf ( reporte, "<tr><td align=\"LEFT\"><b>mbr_tamano</b></td><td>%d</td></tr>\n",mbr.mbr_tamano);
+    fprintf ( reporte, "<tr><td align=\"LEFT\"><b>mbr_fecha_creacion</b></td><td>%s</td></tr>\n",mbr.mbr_fecha_creacion);
+    fprintf ( reporte, "<tr><td align=\"LEFT\"><b>mbr_disk_signature</b></td><td>%d</td></tr>\n",mbr.mbr_disk_signature);
+
+if(mbr.mbr_particion[0].part_status != 'n')
+    {
+
+        if(mbr.mbr_particion[0].part_type == 'e')
+        {
+
+        }
+
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"purple\">mbr_particion[0].part_status</font></b></td><td><font color=\"purple\">%c</font></td></tr>\n",mbr.mbr_particion[0].part_status);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"purple\">mbr_particion[0].part_type</font></b></td><td><font color=\"purple\">%c</font></td></tr>\n",mbr.mbr_particion[0].part_type);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"purple\">mbr_particion[0].part_fit</font></b></td><td><font color=\"purple\">%c</font></td></tr>\n",mbr.mbr_particion[0].part_fit);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"purple\">mbr_particion[0].part_start</font></b></td><td><font color=\"purple\">%d</font></td></tr>\n",mbr.mbr_particion[0].part_start);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"purple\">mbr_particion[0].part_size</font></b></td><td><font color=\"purple\">%d</font></td></tr>\n",mbr.mbr_particion[0].part_size);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"purple\">mbr_particion[0].part_name</font></b></td><td><font color=\"purple\">%s</font></td></tr>\n",mbr.mbr_particion[0].part_name);
+    }
+
+    if(mbr.mbr_particion[1].part_status != 'n')
+    {
+
+        if(mbr.mbr_particion[1].part_type == 'e')
+        {
+
+        }
+
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"green\">mbr_particion[1].part_status</font></b></td><td><font color=\"green\">%c</font></td></tr>\n",mbr.mbr_particion[1].part_status);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"green\">mbr_particion[1].part_type</font></b></td><td><font color=\"green\">%c</font></td></tr>\n",mbr.mbr_particion[1].part_type);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"green\">mbr_particion[1].part_fit</font></b></td><td><font color=\"green\">%c</font></td></tr>\n",mbr.mbr_particion[1].part_fit);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"green\">mbr_particion[1].part_start</font></b></td><td><font color=\"green\">%d</font></td></tr>\n",mbr.mbr_particion[1].part_start);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"green\">mbr_particion[1].part_size</font></b></td><td><font color=\"green\">%d</font></td></tr>\n",mbr.mbr_particion[1].part_size);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"green\">mbr_particion[1].part_name</font></b></td><td><font color=\"green\">%s</font></td></tr>\n",mbr.mbr_particion[1].part_name);
+    }
+
+    if(mbr.mbr_particion[2].part_status != 'n')
+    {
+
+        if(mbr.mbr_particion[2].part_type == 'e')
+        {
+
+        }
+
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"orange\">mbr_particion[2].part_status</font></b></td><td><font color=\"orange\">%c</font></td></tr>\n",mbr.mbr_particion[2].part_status);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"orange\">mbr_particion[2].part_type</font></b></td><td><font color=\"orange\">%c</font></td></tr>\n",mbr.mbr_particion[2].part_type);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"orange\">mbr_particion[2].part_fit</font></b></td><td><font color=\"orange\">%c</font></td></tr>\n",mbr.mbr_particion[2].part_fit);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"orange\">mbr_particion[2].part_start</font></b></td><td><font color=\"orange\">%d</font></td></tr>\n",mbr.mbr_particion[2].part_start);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"orange\">mbr_particion[2].part_size</font></b></td><td><font color=\"orange\">%d</font></td></tr>\n",mbr.mbr_particion[2].part_size);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"orange\">mbr_particion[2].part_name</font></b></td><td><font color=\"orange\">%s</font></td></tr>\n",mbr.mbr_particion[2].part_name);
+    }
+
+    if(mbr.mbr_particion[3].part_status != 'n')
+    {
+
+        if(mbr.mbr_particion[3].part_type == 'e')
+        {
+
+        }
+
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"blue\">mbr_particion[3].part_status</font></b></td><td><font color=\"blue\">%c</font></td></tr>\n",mbr.mbr_particion[3].part_status);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"blue\">mbr_particion[3].part_type</font></b></td><td><font color=\"blue\">%c</font></td></tr>\n",mbr.mbr_particion[3].part_type);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"blue\">mbr_particion[3].part_fit</font></b></td><td><font color=\"blue\">%c</font></td></tr>\n",mbr.mbr_particion[3].part_fit);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"blue\">mbr_particion[3].part_start</font></b></td><td><font color=\"blue\">%d</font></td></tr>\n",mbr.mbr_particion[3].part_start);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"blue\">mbr_particion[3].part_size</font></b></td><td><font color=\"blue\">%d</font></td></tr>\n",mbr.mbr_particion[3].part_size);
+        fprintf ( reporte, "<tr><td align=\"LEFT\"><b><font color=\"blue\">mbr_particion[3].part_name</font></b></td><td><font color=\"blue\">%s</font></td></tr>\n",mbr.mbr_particion[3].part_name);
+    }
+
+    fprintf ( reporte, "</table>>];\n");
+
+    fprintf ( reporte, "}\n");
+    fclose(disco);
+    fclose(reporte);
+    char comandoDOT[500];
+    sprintf(comandoDOT, "dot -Tpng \"/home/dacore/Escritorio/ReporteMBR.dot\" -o %s", path);
+    system(comandoDOT);
+    strcpy(comandoDOT,"");
+    sprintf(comandoDOT, "run-mailcap \"%s\" &", path);
+    system(comandoDOT);
 }
