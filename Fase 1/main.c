@@ -37,6 +37,11 @@ int main()
     return 0;
 }
 
+int compare (const void * a, const void * b)
+{
+  return ( *(int*)a - *(int*)b );
+}
+
 void concatenarComandoMultilinea(char* comandoCompleto)
 {
     char nuevaLinea[256];
@@ -1315,7 +1320,7 @@ void ejecutarREP(char *name, char *path, char *id, char *ruta)
             }
             else if(strcmp(name,"disk") == 0)
             {
-
+                reporteDISK(path, particionesMontadas[disco][0], particionesMontadas[disco][particion]);
             }
             else if(strcmp(name,"inode") == 0)
             {
@@ -1469,3 +1474,113 @@ if(mbr.mbr_particion[0].part_status != 'n')
     sprintf(comandoDOT, "run-mailcap \"%s\" &", path);
     system(comandoDOT);
 }
+
+//reporte Disk
+void reporteDISK(char *path, char *rutaDisco, char *nombreParticion)
+{
+    FILE *disco = fopen (rutaDisco, "r+b");
+    FILE *reporte = fopen ( "/home/dacore/Escritorio/ReporteDISK.dot", "w" );
+
+    MBR mbr;
+    fread (&mbr, sizeof(mbr), 1,disco);
+
+    fprintf ( reporte, "digraph \"ReporteDISK\" {\n");
+    fprintf ( reporte, "node [shape=record, fontname=\"ubuntu\"]\n");
+    fprintf ( reporte, "disco[label=\"{ %s | { MBR ", rutaDisco);
+
+//lleno el arreglo con los datos de donde inicia cada partición
+    int particionesLlenas [4] = {mbr.mbr_particion[0].part_start,mbr.mbr_particion[1].part_start,mbr.mbr_particion[2].part_start,mbr.mbr_particion[3].part_start};
+    int indicesParticiones[4] = {-1,-1,-1,-1};
+//ordeno los datos
+    qsort (particionesLlenas, 4, sizeof(int), compare);
+
+    int i = 0;
+    for(i = 0; i<4; i++)
+    {
+        if(particionesLlenas[i] != 0)
+        {
+            if(mbr.mbr_particion[0].part_start == particionesLlenas[i])
+            {
+                indicesParticiones[i] = 0;
+            }
+            else if(mbr.mbr_particion[1].part_start == particionesLlenas[i])
+            {
+                indicesParticiones[i] = 1;
+            }
+            else if(mbr.mbr_particion[2].part_start == particionesLlenas[i])
+            {
+                indicesParticiones[i] = 2;
+            }
+            else if(mbr.mbr_particion[3].part_start == particionesLlenas[i])
+            {
+                indicesParticiones[i] = 3;
+            }
+        }
+    }
+
+    /**
+        EN ESTE PUNTO TENGO ALMACENADOS EN "particionesLLenas" LOS part_start ORDENADOS ASCENDENTEMENTE
+        Y EN "indicesParticion" LOS ÍNDICES DE LAS PARTICIONES ORDENADOS RESPECTO AL ORDEN DE "particionesLlenas"
+    **/
+    int menorActual = sizeof(mbr); //iniciamos desde el mbr
+    for(i=0; i<4; i++)
+    {
+        if(particionesLlenas[i] != 0)
+        {
+            if(menorActual == particionesLlenas[i]) //quiere decir que no hay espacio libre entre ellos
+            {
+                if(mbr.mbr_particion[indicesParticiones[i]].part_type == 'p')
+                {
+                    fprintf ( reporte, "| PRIMARIA&#92;nNombre: %s ", mbr.mbr_particion[indicesParticiones[i]].part_name);
+                }
+                else if(mbr.mbr_particion[indicesParticiones[i]].part_type == 'e')
+                {
+                    fprintf ( reporte, "| EXTENDIDA&#92;nNombre: %s ", mbr.mbr_particion[indicesParticiones[i]].part_name);
+                }
+                else
+                {
+
+                }
+            }
+            else
+            {
+                if(mbr.mbr_particion[indicesParticiones[i]].part_type == 'p')
+                {
+                    fprintf ( reporte, "| libre&#92;n%d bytes  | PRIMARIA&#92;nNombre: %s ",particionesLlenas[i]-menorActual, mbr.mbr_particion[indicesParticiones[i]].part_name);
+                }
+                else if(mbr.mbr_particion[indicesParticiones[i]].part_type == 'e')
+                {
+                    fprintf ( reporte, "| libre&#92;n%d bytes  | EXTENDIDA&#92;nNombre: %s ",particionesLlenas[i]-menorActual, mbr.mbr_particion[indicesParticiones[i]].part_name);
+                }
+                else
+                {
+
+                }
+            }
+
+            menorActual = mbr.mbr_particion[indicesParticiones[i]].part_size + particionesLlenas[i];
+        }
+    }
+
+    if(menorActual < mbr.mbr_tamano)
+    {
+        fprintf ( reporte, "| libre&#92;n%d bytes ",mbr.mbr_tamano-menorActual);
+    }
+
+
+    fprintf ( reporte, "}}\"];\n");
+    fprintf ( reporte, "}");
+
+    fclose(disco);
+    fclose(reporte);
+
+    char comandoDOT[500];
+    sprintf(comandoDOT, "dot -Tpng \"/home/dacore/Escritorio/ReporteDISK.dot\" -o %s", path);
+    system(comandoDOT);
+    strcpy(comandoDOT,"");
+    sprintf(comandoDOT, "run-mailcap \"%s\" &", path);
+    system(comandoDOT);
+}
+
+
+
