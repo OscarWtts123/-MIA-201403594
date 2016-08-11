@@ -860,17 +860,15 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                     || (mbr.mbr_particion[2].part_status == 'n') || (mbr.mbr_particion[3].part_status == 'n'))
                                     {
                                         int indiceParticion = -1;
+/** nueva onda **/
 
-                                        if(mbr.mbr_particion[0].part_status == 'n')
+                                        if((mbr.mbr_particion[0].part_status == 'n') && (mbr.mbr_particion[1].part_status == 'n')
+                                        && (mbr.mbr_particion[2].part_status == 'n') && (mbr.mbr_particion[3].part_status == 'n'))
                                         {
-                                            //indiceParticion = 0;
-                                            int inicioEspacioLibre = sizeof(mbr); //desde donde termina el MBR
-                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
-
-                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+                                            if((mbr.mbr_tamano - sizeof(mbr)) >= unidades) //cabe en el tamaño del archivo
                                             {
                                                 strcpy(mbr.mbr_particion[0].part_name, nameLimpio);
-                                                mbr.mbr_particion[0].part_start = inicioEspacioLibre;
+                                                mbr.mbr_particion[0].part_start = sizeof(mbr);
                                                 mbr.mbr_particion[0].part_status = 'y';
                                                 mbr.mbr_particion[0].part_size = unidades;
                                                 mbr.mbr_particion[0].part_type = 'p';
@@ -878,105 +876,226 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
 
                                                 printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                             }
-                                            else
-                                            {
-                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
-                                            }
+                                        }
+                                        else if((mbr.mbr_particion[0].part_start - sizeof(mbr)) >= unidades) //cabe entre el mbr y part0
+                                        {
+                                            strcpy(mbr.mbr_particion[1].part_name, mbr.mbr_particion[0].part_name);
+                                            mbr.mbr_particion[1].part_start = mbr.mbr_particion[0].part_start;
+                                            mbr.mbr_particion[1].part_status = mbr.mbr_particion[0].part_status;
+                                            mbr.mbr_particion[1].part_size = mbr.mbr_particion[0].part_size;
+                                            mbr.mbr_particion[1].part_type = mbr.mbr_particion[0].part_type;
+                                            mbr.mbr_particion[1].part_fit = mbr.mbr_particion[0].part_fit;
+
+                                            strcpy(mbr.mbr_particion[0].part_name, nameLimpio);
+                                            mbr.mbr_particion[0].part_start = sizeof(mbr);
+                                            mbr.mbr_particion[0].part_status = 'y';
+                                            mbr.mbr_particion[0].part_size = unidades;
+                                            mbr.mbr_particion[0].part_type = 'p';
+                                            mbr.mbr_particion[0].part_fit = fitPart;
+
+                                            printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                         }
                                         else if(mbr.mbr_particion[1].part_status == 'n')
                                         {
-                                            indiceParticion = 1;
-                                            int inicioEspacioLibre = mbr.mbr_particion[0].part_start +  mbr.mbr_particion[0].part_size;//desde donde termina el MBR
-                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
-
-                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+                                            if((mbr.mbr_tamano - (mbr.mbr_particion[0].part_size + mbr.mbr_particion[0].part_start)) >= unidades) //cabe entre part 0 y el tamaño total
                                             {
-                                                if(strcmp(mbr.mbr_particion[0].part_name, nameLimpio) != 0) //el nombre no existe
-                                                {
-                                                    strcpy(mbr.mbr_particion[1].part_name, nameLimpio);
-                                                    mbr.mbr_particion[1].part_start = inicioEspacioLibre;
-                                                    mbr.mbr_particion[1].part_status = 'y';
-                                                    mbr.mbr_particion[1].part_size = unidades;
-                                                    mbr.mbr_particion[1].part_type = 'p';
-                                                    mbr.mbr_particion[1].part_fit = fitPart;
+                                                strcpy(mbr.mbr_particion[1].part_name, nameLimpio);
+                                                mbr.mbr_particion[1].part_start = (mbr.mbr_particion[0].part_size + mbr.mbr_particion[0].part_start);
+                                                mbr.mbr_particion[1].part_status = 'y';
+                                                mbr.mbr_particion[1].part_size = unidades;
+                                                mbr.mbr_particion[1].part_type = 'p';
+                                                mbr.mbr_particion[1].part_fit = fitPart;
 
-                                                    printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
-                                                }
-                                                else
-                                                {
-                                                    printf("\n\x1B[33m****Ya existe una partición con ese nombre.****\x1B[0m\n");
-                                                }
+                                                printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                             }
-                                            else
-                                            {
-                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
-                                            }
+                                        }
+                                        else if(mbr.mbr_particion[1].part_start - (mbr.mbr_particion[0].part_size + mbr.mbr_particion[0].part_start)) //cabe entre el part0 y part1
+                                        {
+                                            strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[1].part_name);
+                                            mbr.mbr_particion[2].part_start = mbr.mbr_particion[1].part_start;
+                                            mbr.mbr_particion[2].part_status = mbr.mbr_particion[1].part_status;
+                                            mbr.mbr_particion[2].part_size = mbr.mbr_particion[1].part_size;
+                                            mbr.mbr_particion[2].part_type = mbr.mbr_particion[1].part_type;
+                                            mbr.mbr_particion[2].part_fit = mbr.mbr_particion[1].part_fit;
+
+                                            strcpy(mbr.mbr_particion[1].part_name, nameLimpio);
+                                            mbr.mbr_particion[1].part_start = (mbr.mbr_particion[0].part_size + mbr.mbr_particion[0].part_start);
+                                            mbr.mbr_particion[1].part_status = 'y';
+                                            mbr.mbr_particion[1].part_size = unidades;
+                                            mbr.mbr_particion[1].part_type = 'p';
+                                            mbr.mbr_particion[1].part_fit = fitPart;
+
+                                            printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                         }
                                         else if(mbr.mbr_particion[2].part_status == 'n')
                                         {
-                                            indiceParticion = 2;
-                                            int inicioEspacioLibre = mbr.mbr_particion[1].part_start +  mbr.mbr_particion[1].part_size ;//desde donde termina el MBR
-                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
-
-                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+                                            if((mbr.mbr_tamano - (mbr.mbr_particion[1].part_size + mbr.mbr_particion[1].part_start)) >= unidades) //cabe entre part 1 y el tamaño total
                                             {
-                                                if((strcmp(mbr.mbr_particion[0].part_name, nameLimpio) != 0) &&
-                                                   (strcmp(mbr.mbr_particion[1].part_name, nameLimpio) != 0)) //el nombre no existe
-                                                {
-                                                    strcpy(mbr.mbr_particion[2].part_name, nameLimpio);
-                                                    mbr.mbr_particion[2].part_start = inicioEspacioLibre;
-                                                    mbr.mbr_particion[2].part_status = 'y';
-                                                    mbr.mbr_particion[2].part_size = unidades;
-                                                    mbr.mbr_particion[2].part_type = 'p';
-                                                    mbr.mbr_particion[2].part_fit = fitPart;
+                                                strcpy(mbr.mbr_particion[2].part_name, nameLimpio);
+                                                mbr.mbr_particion[2].part_start = (mbr.mbr_particion[1].part_size + mbr.mbr_particion[1].part_start);
+                                                mbr.mbr_particion[2].part_status = 'y';
+                                                mbr.mbr_particion[2].part_size = unidades;
+                                                mbr.mbr_particion[2].part_type = 'p';
+                                                mbr.mbr_particion[2].part_fit = fitPart;
 
-                                                    printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
-                                                }
-                                                else
-                                                {
-                                                    printf("\n\x1B[33m****Ya existe una partición con ese nombre.****\x1B[0m\n");
-                                                }
+                                                printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                             }
-                                            else
-                                            {
-                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
-                                            }
+                                        }
+                                        else if(mbr.mbr_particion[2].part_start - (mbr.mbr_particion[1].part_size + mbr.mbr_particion[1].part_start)) //cabe entre el part1 y part2
+                                        {
+                                            strcpy(mbr.mbr_particion[3].part_name, mbr.mbr_particion[2].part_name);
+                                            mbr.mbr_particion[3].part_start = mbr.mbr_particion[2].part_start;
+                                            mbr.mbr_particion[3].part_status = mbr.mbr_particion[2].part_status;
+                                            mbr.mbr_particion[3].part_size = mbr.mbr_particion[2].part_size;
+                                            mbr.mbr_particion[3].part_type = mbr.mbr_particion[2].part_type;
+                                            mbr.mbr_particion[3].part_fit = mbr.mbr_particion[2].part_fit;
+
+                                            strcpy(mbr.mbr_particion[2].part_name, nameLimpio);
+                                            mbr.mbr_particion[2].part_start = (mbr.mbr_particion[1].part_size + mbr.mbr_particion[1].part_start);
+                                            mbr.mbr_particion[2].part_status = 'y';
+                                            mbr.mbr_particion[2].part_size = unidades;
+                                            mbr.mbr_particion[2].part_type = 'p';
+                                            mbr.mbr_particion[2].part_fit = fitPart;
+
+                                            printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                         }
                                         else if(mbr.mbr_particion[3].part_status == 'n')
                                         {
-                                            indiceParticion = 3;
-                                            int inicioEspacioLibre = mbr.mbr_particion[2].part_start +  mbr.mbr_particion[2].part_size; //desde donde termina el MBR
-                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
-
-                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+                                            if((mbr.mbr_tamano - (mbr.mbr_particion[2].part_size + mbr.mbr_particion[2].part_start)) >= unidades) //cabe entre part 2 y el tamaño total
                                             {
-                                                if((strcmp(mbr.mbr_particion[0].part_name, nameLimpio) != 0) &&
-                                                   (strcmp(mbr.mbr_particion[1].part_name, nameLimpio) != 0) &&
-                                                   (strcmp(mbr.mbr_particion[2].part_name, nameLimpio) != 0)) //el nombre no existe
-                                                {
-                                                    strcpy(mbr.mbr_particion[3].part_name, nameLimpio);
-                                                    mbr.mbr_particion[3].part_start = inicioEspacioLibre;
-                                                    mbr.mbr_particion[3].part_status = 'y';
-                                                    mbr.mbr_particion[3].part_size = unidades;
-                                                    mbr.mbr_particion[3].part_type = 'p';
-                                                    mbr.mbr_particion[3].part_fit = fitPart;
+                                                strcpy(mbr.mbr_particion[3].part_name, nameLimpio);
+                                                mbr.mbr_particion[3].part_start = (mbr.mbr_particion[2].part_size + mbr.mbr_particion[2].part_start);
+                                                mbr.mbr_particion[3].part_status = 'y';
+                                                mbr.mbr_particion[3].part_size = unidades;
+                                                mbr.mbr_particion[3].part_type = 'p';
+                                                mbr.mbr_particion[3].part_fit = fitPart;
 
-                                                    printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
-                                                }
-                                                else
-                                                {
-                                                    printf("\n\x1B[33m****Ya existe una partición con ese nombre.****\x1B[0m\n");
-                                                }
-                                            }
-                                            else
-                                            {
-                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
+                                                printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
                                             }
                                         }
                                         else
                                         {
-                                            printf("\n\x1B[33m****No se que pasa.****\x1B[0m\n");
+
+                                            printf("\n\x1B[33m****No queda espacio en el disco****\x1B[0m\n");
                                         }
+
+/** nueva onda **/
+//                                        if(mbr.mbr_particion[0].part_status == 'n')
+//                                        {
+//                                            //indiceParticion = 0;
+//                                            int inicioEspacioLibre = sizeof(mbr); //desde donde termina el MBR
+//                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
+//
+//                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+//                                            {
+//                                                strcpy(mbr.mbr_particion[0].part_name, nameLimpio);
+//                                                mbr.mbr_particion[0].part_start = inicioEspacioLibre;
+//                                                mbr.mbr_particion[0].part_status = 'y';
+//                                                mbr.mbr_particion[0].part_size = unidades;
+//                                                mbr.mbr_particion[0].part_type = 'p';
+//                                                mbr.mbr_particion[0].part_fit = fitPart;
+//
+//                                                printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
+//                                            }
+//                                            else
+//                                            {
+//                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
+//                                            }
+//                                        }
+//                                        else if(mbr.mbr_particion[1].part_status == 'n')
+//                                        {
+//                                            indiceParticion = 1;
+//                                            int inicioEspacioLibre = mbr.mbr_particion[0].part_start +  mbr.mbr_particion[0].part_size;//desde donde termina el MBR
+//                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
+//
+//                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+//                                            {
+//                                                if(strcmp(mbr.mbr_particion[0].part_name, nameLimpio) != 0) //el nombre no existe
+//                                                {
+//                                                    strcpy(mbr.mbr_particion[1].part_name, nameLimpio);
+//                                                    mbr.mbr_particion[1].part_start = inicioEspacioLibre;
+//                                                    mbr.mbr_particion[1].part_status = 'y';
+//                                                    mbr.mbr_particion[1].part_size = unidades;
+//                                                    mbr.mbr_particion[1].part_type = 'p';
+//                                                    mbr.mbr_particion[1].part_fit = fitPart;
+//
+//                                                    printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
+//                                                }
+//                                                else
+//                                                {
+//                                                    printf("\n\x1B[33m****Ya existe una partición con ese nombre.****\x1B[0m\n");
+//                                                }
+//                                            }
+//                                            else
+//                                            {
+//                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
+//                                            }
+//                                        }
+//                                        else if(mbr.mbr_particion[2].part_status == 'n')
+//                                        {
+//                                            indiceParticion = 2;
+//                                            int inicioEspacioLibre = mbr.mbr_particion[1].part_start +  mbr.mbr_particion[1].part_size ;//desde donde termina el MBR
+//                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
+//
+//                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+//                                            {
+//                                                if((strcmp(mbr.mbr_particion[0].part_name, nameLimpio) != 0) &&
+//                                                   (strcmp(mbr.mbr_particion[1].part_name, nameLimpio) != 0)) //el nombre no existe
+//                                                {
+//                                                    strcpy(mbr.mbr_particion[2].part_name, nameLimpio);
+//                                                    mbr.mbr_particion[2].part_start = inicioEspacioLibre;
+//                                                    mbr.mbr_particion[2].part_status = 'y';
+//                                                    mbr.mbr_particion[2].part_size = unidades;
+//                                                    mbr.mbr_particion[2].part_type = 'p';
+//                                                    mbr.mbr_particion[2].part_fit = fitPart;
+//
+//                                                    printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
+//                                                }
+//                                                else
+//                                                {
+//                                                    printf("\n\x1B[33m****Ya existe una partición con ese nombre.****\x1B[0m\n");
+//                                                }
+//                                            }
+//                                            else
+//                                            {
+//                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
+//                                            }
+//                                        }
+//                                        else if(mbr.mbr_particion[3].part_status == 'n')
+//                                        {
+//                                            indiceParticion = 3;
+//                                            int inicioEspacioLibre = mbr.mbr_particion[2].part_start +  mbr.mbr_particion[2].part_size; //desde donde termina el MBR
+//                                            int finEspacioLibre = mbr.mbr_tamano; //hasta el fin del disco
+//
+//                                            if((finEspacioLibre - inicioEspacioLibre) >= unidades) //sí encontré el espacio
+//                                            {
+//                                                if((strcmp(mbr.mbr_particion[0].part_name, nameLimpio) != 0) &&
+//                                                   (strcmp(mbr.mbr_particion[1].part_name, nameLimpio) != 0) &&
+//                                                   (strcmp(mbr.mbr_particion[2].part_name, nameLimpio) != 0)) //el nombre no existe
+//                                                {
+//                                                    strcpy(mbr.mbr_particion[3].part_name, nameLimpio);
+//                                                    mbr.mbr_particion[3].part_start = inicioEspacioLibre;
+//                                                    mbr.mbr_particion[3].part_status = 'y';
+//                                                    mbr.mbr_particion[3].part_size = unidades;
+//                                                    mbr.mbr_particion[3].part_type = 'p';
+//                                                    mbr.mbr_particion[3].part_fit = fitPart;
+//
+//                                                    printf("\n\x1B[33m****¡La partición primaria %s se ha creado con éxito!****\x1B[0m\n", name);
+//                                                }
+//                                                else
+//                                                {
+//                                                    printf("\n\x1B[33m****Ya existe una partición con ese nombre.****\x1B[0m\n");
+//                                                }
+//                                            }
+//                                            else
+//                                            {
+//                                                printf("\n\x1B[33m****No hay espacio suficiente en el disco.****\x1B[0m\n");
+//                                            }
+//                                        }
+//                                        else
+//                                        {
+//                                            printf("\n\x1B[33m****No se que pasa.****\x1B[0m\n");
+//                                        }
                                     }
                                     else
                                     {
