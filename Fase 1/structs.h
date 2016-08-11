@@ -25,7 +25,6 @@ typedef struct ExtendenBootRecord{
     int part_start;
     int part_size;
     int part_next;
-    int part_previous;
     char part_name[16];
 }EBR;
 
