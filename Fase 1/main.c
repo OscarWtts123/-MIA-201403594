@@ -542,6 +542,30 @@ void leerComando(char* linea)
 
 }
 
+//busca el id de una partición con el path del disco y el nombre de la partición /**esto tabmién lo toqué :v**/
+void retornarIdParticion(char* id, char* path, char* nombre)
+{
+    int disco = 0;
+    int particion = 1;
+    char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+
+    while(disco < 50) //almacena hasta el índice 49 (50 discos)
+    {
+        if(strcmp(particionesMontadas[disco][0] ,path)==0){
+
+            while (strcmp(particionesMontadas[disco][particion] ,nombre)!=0)
+            {
+                particion++;
+            }
+
+            sprintf(aux, "vd%c%d",identificadores[disco], particion);
+            strcpy(id, aux);
+            break;
+        }
+        disco++;
+    }
+}
+
 //ejecuta el comando "exec"
 void ejecutarEXEC(char* path)
 {
@@ -769,11 +793,35 @@ void ejecutarRMDISK(char* path)
 
         if(strcmp(nuevaLinea,"s") == 0)
         {
-            char eliminarDisco [100] = "rm ";
-            strcat(eliminarDisco, path);
-            system(eliminarDisco);
+            int disco = 0;
+            int bandera = 0;
+            char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+            strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
+            printf("path limpio: %s\n",pathLimpio);
+            while(disco < 50) //almacena hasta el índice 49 (50 discos)
+            {
+            printf("RUTA EN %d: %s\n",disco,particionesMontadas[disco][0]);
+                if(strcmp(particionesMontadas[disco][0] ,pathLimpio)==0){
+                    bandera = 1;
+                    break;
+                }
+                disco++;
+            }
 
-            //printf("\n\x1B[33m****¡Disco eliminado exitosamente!****\x1B[0m\n");
+            /**nuevo**/
+            printf("bandera: %d\n",bandera);
+            if(bandera == 0)
+            {
+                char eliminarDisco [100] = "rm ";
+                strcat(eliminarDisco, path);
+                system(eliminarDisco);
+            }
+            else
+            {
+                printf("\n\x1B[33m****Para poder borrar el disco primero desmonta sus particiones.****\x1B[0m\n");
+            }
+
+           //printf("\n\x1B[33m****¡Disco eliminado exitosamente!****\x1B[0m\n");
         }
 
     }
@@ -1099,6 +1147,15 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
 
                                 if(strcmp(nuevaLinea,"s") == 0)
                                 {
+                                    /*** esto fue lo que toqué :v **/
+
+                                    char* idTemporal = malloc(strlen("solo quiero ocupar espacio :v") + 100);
+                                    memset(idTemporal,'\0',strlen(idTemporal));
+
+                                    retornarIdParticion(idTemporal,pathLimpio,nameLimpio);
+                                    printf("idTemp: %s\n",idTemporal);
+                                    ejecutarUNMOUNT(idTemporal);
+                                    /** aquí terminé **/
                                     if(strcmp(mbr.mbr_particion[0].part_name,nameLimpio) == 0) //quiero eliminar la part0
                                     {
                                         if(mbr.mbr_particion[0].part_type == 'p')
@@ -1465,12 +1522,12 @@ void ejecutarUNMOUNT(char* id)
     {
         strcpy(particionesMontadas[disco][particion],""); //se desmonta la partición
 
-        int iterador = 0;
+        int iterador = 1;
         int banderaColumnaVacia = 0;
 
         while(iterador < 50)
         {
-            if(particionesMontadas[disco][iterador]) //verifica que la columna del disco todavía tenga particiones montadas
+            if(strcmp(particionesMontadas[disco][iterador],"") != 0) //verifica que la columna del disco todavía tenga particiones montadas
             {
                 banderaColumnaVacia = 1;
                 break;
@@ -1516,7 +1573,12 @@ void ejecutarREP(char *name, char *path, char *id, char *ruta)
         char directorio [256];
         int tamano = strlen(path) - strlen(archivo);
         strncpy(directorio, path, tamano);
-        strcat(directorio, "\"");
+
+        if(directorio[strlen(directorio)-1] != '\"')
+        {
+            strcat(directorio, "\"");
+        }
+
 
         char crearDirectorio[256] = "mkdir -p ";
         strcat(crearDirectorio, directorio);
