@@ -1081,6 +1081,7 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                 {
                                     /** REVISAR SI YA EXISTE UNA PARTICIÓN EXTENDIDA **/
                                     int banderaExtendida = -1;
+                                    int indiceExtendida = -1;
 
                                     if(mbr.mbr_particion[0].part_type == 'e')
                                     {
@@ -1097,6 +1098,201 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                     else if(mbr.mbr_particion[3].part_type == 'e')
                                     {
                                         banderaExtendida = 3;
+                                    }
+
+                                    if(banderaExtendida == -1) //no hay ninguna partición extendida por el momento
+                                    {
+                                        if((mbr.mbr_particion[0].part_status == 'n') || (mbr.mbr_particion[1].part_status == 'n')
+                                        || (mbr.mbr_particion[2].part_status == 'n') || (mbr.mbr_particion[3].part_status == 'n'))
+                                        {
+                                            int indiceParticion = -1;
+    /** nueva onda **/
+
+                                            if((mbr.mbr_particion[0].part_status == 'n') && (mbr.mbr_particion[1].part_status == 'n')
+                                            && (mbr.mbr_particion[2].part_status == 'n') && (mbr.mbr_particion[3].part_status == 'n'))
+                                            {
+                                                if((mbr.mbr_tamano - sizeof(mbr)) >= unidades) //cabe en el tamaño del archivo
+                                                {
+                                                    strcpy(mbr.mbr_particion[0].part_name, nameLimpio);
+                                                    mbr.mbr_particion[0].part_start = sizeof(mbr);
+                                                    mbr.mbr_particion[0].part_status = 'y';
+                                                    mbr.mbr_particion[0].part_size = unidades;
+                                                    mbr.mbr_particion[0].part_type = 'e';
+                                                    mbr.mbr_particion[0].part_fit = fitPart;
+                                                    indiceExtendida = 0;
+
+                                                    printf("\n\x1B[33m****¡La partición extendida %s se ha creado con éxito!****\x1B[0m\n", name);
+                                                }
+                                                else
+                                                {
+
+                                                    printf("\n\x1B[33m****No queda espacio en el disco****\x1B[0m\n");
+                                                }
+                                            }
+                                            else if((mbr.mbr_particion[0].part_start - sizeof(mbr)) >= unidades) //cabe entre el mbr y part0
+                                            {
+                                                strcpy(mbr.mbr_particion[3].part_name, mbr.mbr_particion[2].part_name);
+                                                mbr.mbr_particion[3].part_start = mbr.mbr_particion[2].part_start;
+                                                mbr.mbr_particion[3].part_status = mbr.mbr_particion[2].part_status;
+                                                mbr.mbr_particion[3].part_size = mbr.mbr_particion[2].part_size;
+                                                mbr.mbr_particion[3].part_type = mbr.mbr_particion[2].part_type;
+                                                mbr.mbr_particion[3].part_fit = mbr.mbr_particion[2].part_fit;
+
+                                                strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[1].part_name);
+                                                mbr.mbr_particion[2].part_start = mbr.mbr_particion[1].part_start;
+                                                mbr.mbr_particion[2].part_status = mbr.mbr_particion[1].part_status;
+                                                mbr.mbr_particion[2].part_size = mbr.mbr_particion[1].part_size;
+                                                mbr.mbr_particion[2].part_type = mbr.mbr_particion[1].part_type;
+                                                mbr.mbr_particion[2].part_fit = mbr.mbr_particion[1].part_fit;
+
+                                                strcpy(mbr.mbr_particion[1].part_name, mbr.mbr_particion[0].part_name);
+                                                mbr.mbr_particion[1].part_start = mbr.mbr_particion[0].part_start;
+                                                mbr.mbr_particion[1].part_status = mbr.mbr_particion[0].part_status;
+                                                mbr.mbr_particion[1].part_size = mbr.mbr_particion[0].part_size;
+                                                mbr.mbr_particion[1].part_type = mbr.mbr_particion[0].part_type;
+                                                mbr.mbr_particion[1].part_fit = mbr.mbr_particion[0].part_fit;
+
+                                                strcpy(mbr.mbr_particion[0].part_name, nameLimpio);
+                                                mbr.mbr_particion[0].part_start = sizeof(mbr);
+                                                mbr.mbr_particion[0].part_status = 'y';
+                                                mbr.mbr_particion[0].part_size = unidades;
+                                                mbr.mbr_particion[0].part_type = 'e';
+                                                mbr.mbr_particion[0].part_fit = fitPart;
+                                                indiceExtendida = 0;
+
+                                                printf("\n\x1B[33m****¡La partición extendida %s se ha creado con éxito!****\x1B[0m\n", name);
+                                            }
+                                            else if(mbr.mbr_particion[1].part_status == 'n')
+                                            {
+                                                if((mbr.mbr_tamano - (mbr.mbr_particion[0].part_size + mbr.mbr_particion[0].part_start)) >= unidades) //cabe entre part 0 y el tamaño total
+                                                {
+                                                    strcpy(mbr.mbr_particion[1].part_name, nameLimpio);
+                                                    mbr.mbr_particion[1].part_start = (mbr.mbr_particion[0].part_size + mbr.mbr_particion[0].part_start);
+                                                    mbr.mbr_particion[1].part_status = 'y';
+                                                    mbr.mbr_particion[1].part_size = unidades;
+                                                    mbr.mbr_particion[1].part_type = 'e';
+                                                    mbr.mbr_particion[1].part_fit = fitPart;
+                                                    indiceExtendida = 1;
+
+                                                    printf("\n\x1B[33m****¡La partición extendida %s se ha creado con éxito!****\x1B[0m\n", name);
+                                                }
+                                                else
+                                                {
+
+                                                    printf("\n\x1B[33m****No queda espacio en el disco****\x1B[0m\n");
+                                                }
+                                            }
+                                            else if(mbr.mbr_particion[1].part_start - (mbr.mbr_particion[0].part_size + mbr.mbr_particion[0].part_start) >= unidades) //cabe entre el part0 y part1
+                                            {
+                                                strcpy(mbr.mbr_particion[3].part_name, mbr.mbr_particion[2].part_name);
+                                                mbr.mbr_particion[3].part_start = mbr.mbr_particion[2].part_start;
+                                                mbr.mbr_particion[3].part_status = mbr.mbr_particion[2].part_status;
+                                                mbr.mbr_particion[3].part_size = mbr.mbr_particion[2].part_size;
+                                                mbr.mbr_particion[3].part_type = mbr.mbr_particion[2].part_type;
+                                                mbr.mbr_particion[3].part_fit = mbr.mbr_particion[2].part_fit;
+
+                                                strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[1].part_name);
+                                                mbr.mbr_particion[2].part_start = mbr.mbr_particion[1].part_start;
+                                                mbr.mbr_particion[2].part_status = mbr.mbr_particion[1].part_status;
+                                                mbr.mbr_particion[2].part_size = mbr.mbr_particion[1].part_size;
+                                                mbr.mbr_particion[2].part_type = mbr.mbr_particion[1].part_type;
+                                                mbr.mbr_particion[2].part_fit = mbr.mbr_particion[1].part_fit;
+
+                                                strcpy(mbr.mbr_particion[1].part_name, nameLimpio);
+                                                mbr.mbr_particion[1].part_start = (mbr.mbr_particion[0].part_size + mbr.mbr_particion[0].part_start);
+                                                mbr.mbr_particion[1].part_status = 'y';
+                                                mbr.mbr_particion[1].part_size = unidades;
+                                                mbr.mbr_particion[1].part_type = 'e';
+                                                mbr.mbr_particion[1].part_fit = fitPart;
+                                                indiceExtendida = 1;
+
+                                                printf("\n\x1B[33m****¡La partición extendida %s se ha creado con éxito!****\x1B[0m\n", name);
+                                            }
+                                            else if(mbr.mbr_particion[2].part_status == 'n')
+                                            {
+                                                if((mbr.mbr_tamano - (mbr.mbr_particion[1].part_size + mbr.mbr_particion[1].part_start)) >= unidades) //cabe entre part 1 y el tamaño total
+                                                {
+                                                    strcpy(mbr.mbr_particion[2].part_name, nameLimpio);
+                                                    mbr.mbr_particion[2].part_start = (mbr.mbr_particion[1].part_size + mbr.mbr_particion[1].part_start);
+                                                    mbr.mbr_particion[2].part_status = 'y';
+                                                    mbr.mbr_particion[2].part_size = unidades;
+                                                    mbr.mbr_particion[2].part_type = 'e';
+                                                    mbr.mbr_particion[2].part_fit = fitPart;
+                                                    indiceExtendida = 2;
+
+                                                    printf("\n\x1B[33m****¡La partición extendida %s se ha creado con éxito!****\x1B[0m\n", name);
+                                                }
+                                                else
+                                                {
+
+                                                    printf("\n\x1B[33m****No queda espacio en el disco****\x1B[0m\n");
+                                                }
+                                            }
+                                            else if(mbr.mbr_particion[2].part_start - (mbr.mbr_particion[1].part_size + mbr.mbr_particion[1].part_start) >= unidades) //cabe entre el part1 y part2
+                                            {
+                                                strcpy(mbr.mbr_particion[3].part_name, mbr.mbr_particion[2].part_name);
+                                                mbr.mbr_particion[3].part_start = mbr.mbr_particion[2].part_start;
+                                                mbr.mbr_particion[3].part_status = mbr.mbr_particion[2].part_status;
+                                                mbr.mbr_particion[3].part_size = mbr.mbr_particion[2].part_size;
+                                                mbr.mbr_particion[3].part_type = mbr.mbr_particion[2].part_type;
+                                                mbr.mbr_particion[3].part_fit = mbr.mbr_particion[2].part_fit;
+
+                                                strcpy(mbr.mbr_particion[2].part_name, nameLimpio);
+                                                mbr.mbr_particion[2].part_start = (mbr.mbr_particion[1].part_size + mbr.mbr_particion[1].part_start);
+                                                mbr.mbr_particion[2].part_status = 'y';
+                                                mbr.mbr_particion[2].part_size = unidades;
+                                                mbr.mbr_particion[2].part_type = 'e';
+                                                mbr.mbr_particion[2].part_fit = fitPart;
+                                                    indiceExtendida = 2;
+
+                                                printf("\n\x1B[33m****¡La partición extendida %s se ha creado con éxito!****\x1B[0m\n", name);
+                                            }
+                                            else if(mbr.mbr_particion[3].part_status == 'n')
+                                            {
+                                                if((mbr.mbr_tamano - (mbr.mbr_particion[2].part_size + mbr.mbr_particion[2].part_start)) >= unidades) //cabe entre part 2 y el tamaño total
+                                                {
+                                                    strcpy(mbr.mbr_particion[3].part_name, nameLimpio);
+                                                    mbr.mbr_particion[3].part_start = (mbr.mbr_particion[2].part_size + mbr.mbr_particion[2].part_start);
+                                                    mbr.mbr_particion[3].part_status = 'y';
+                                                    mbr.mbr_particion[3].part_size = unidades;
+                                                    mbr.mbr_particion[3].part_type = 'e';
+                                                    mbr.mbr_particion[3].part_fit = fitPart;
+                                                    indiceExtendida = 3;
+
+                                                    printf("\n\x1B[33m****¡La partición extendida %s se ha creado con éxito!****\x1B[0m\n", name);
+                                                }
+                                                else
+                                                {
+
+                                                    printf("\n\x1B[33m****No queda espacio en el disco****\x1B[0m\n");
+                                                }
+                                            }
+                                            else
+                                            {
+
+                                                printf("\n\x1B[33m****No queda espacio en el disco****\x1B[0m\n");
+                                            }
+
+    /** nueva onda **/  /**POR ACÁ DEBERÍA GUARDAR EL EBR EN EL DISCO **/
+                                            if(indiceExtendida != -1)
+                                            {
+                                                EBR ebr;
+                                                ebr.part_status = 'n';
+                                                ebr.part_next = -1;
+
+                                                fseek(disco,mbr.mbr_particion[indiceExtendida].part_start,SEEK_SET);
+                                                fwrite(&ebr,sizeof(ebr),1,disco);
+                                            }
+
+                                        }
+                                        else
+                                        {
+                                            printf("\n\x1B[33m****No se pueden crear más particiones en este disco.****\x1B[0m\n");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        printf("\n\x1B[33m****Solo puede existir 1 partición extendida.****\x1B[0m\n");
                                     }
                                 }
                                 else if(strcmp(type,"l") == 0) //crear partición logica
@@ -1185,14 +1381,52 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                             mbr.mbr_particion[3].part_start = 0;
                                             mbr.mbr_particion[3].part_status = 'n';
                                             mbr.mbr_particion[3].part_size = 0;
-                                            mbr.mbr_particion[3].part_type = 'p';
+                                            mbr.mbr_particion[3].part_type = '\0';
                                             mbr.mbr_particion[3].part_fit = 'w';
+
+                                            if(strcmp(tdelete,"full") == 0)
+                                            {
+
+                                            }
 
                                             printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
                                         else if(mbr.mbr_particion[0].part_type == 'e')
                                         {
+                                            strcpy(mbr.mbr_particion[0].part_name, mbr.mbr_particion[1].part_name);
+                                            mbr.mbr_particion[0].part_start = mbr.mbr_particion[1].part_start;
+                                            mbr.mbr_particion[0].part_status = mbr.mbr_particion[1].part_status;
+                                            mbr.mbr_particion[0].part_size = mbr.mbr_particion[1].part_size;
+                                            mbr.mbr_particion[0].part_type = mbr.mbr_particion[1].part_type;
+                                            mbr.mbr_particion[0].part_fit = mbr.mbr_particion[1].part_fit;
 
+                                            strcpy(mbr.mbr_particion[1].part_name, mbr.mbr_particion[2].part_name);
+                                            mbr.mbr_particion[1].part_start = mbr.mbr_particion[2].part_start;
+                                            mbr.mbr_particion[1].part_status = mbr.mbr_particion[2].part_status;
+                                            mbr.mbr_particion[1].part_size = mbr.mbr_particion[2].part_size;
+                                            mbr.mbr_particion[1].part_type = mbr.mbr_particion[2].part_type;
+                                            mbr.mbr_particion[1].part_fit = mbr.mbr_particion[2].part_fit;
+
+                                            strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[3].part_name);
+                                            mbr.mbr_particion[2].part_start = mbr.mbr_particion[3].part_start;
+                                            mbr.mbr_particion[2].part_status = mbr.mbr_particion[3].part_status;
+                                            mbr.mbr_particion[2].part_size = mbr.mbr_particion[3].part_size;
+                                            mbr.mbr_particion[2].part_type = mbr.mbr_particion[3].part_type;
+                                            mbr.mbr_particion[2].part_fit = mbr.mbr_particion[3].part_fit;
+
+                                            strcpy(mbr.mbr_particion[3].part_name, "");
+                                            mbr.mbr_particion[3].part_start = 0;
+                                            mbr.mbr_particion[3].part_status = 'n';
+                                            mbr.mbr_particion[3].part_size = 0;
+                                            mbr.mbr_particion[3].part_type = '\0';
+                                            mbr.mbr_particion[3].part_fit = 'w';
+
+                                            if(strcmp(tdelete,"full") == 0)
+                                            {
+
+                                            }
+
+                                            printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
                                         else if(mbr.mbr_particion[0].part_type == 'l')
                                         {
@@ -1221,7 +1455,7 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                             mbr.mbr_particion[3].part_start = 0;
                                             mbr.mbr_particion[3].part_status = 'n';
                                             mbr.mbr_particion[3].part_size = 0;
-                                            mbr.mbr_particion[3].part_type = 'p';
+                                            mbr.mbr_particion[3].part_type = '\0';
                                             mbr.mbr_particion[3].part_fit = 'w';
 
                                             if(strcmp(tdelete,"full") == 0)
@@ -1233,7 +1467,33 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                         }
                                         else if(mbr.mbr_particion[0].part_type == 'e')
                                         {
+                                            strcpy(mbr.mbr_particion[1].part_name, mbr.mbr_particion[2].part_name);
+                                            mbr.mbr_particion[1].part_start = mbr.mbr_particion[2].part_start;
+                                            mbr.mbr_particion[1].part_status = mbr.mbr_particion[2].part_status;
+                                            mbr.mbr_particion[1].part_size = mbr.mbr_particion[2].part_size;
+                                            mbr.mbr_particion[1].part_type = mbr.mbr_particion[2].part_type;
+                                            mbr.mbr_particion[1].part_fit = mbr.mbr_particion[2].part_fit;
 
+                                            strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[3].part_name);
+                                            mbr.mbr_particion[2].part_start = mbr.mbr_particion[3].part_start;
+                                            mbr.mbr_particion[2].part_status = mbr.mbr_particion[3].part_status;
+                                            mbr.mbr_particion[2].part_size = mbr.mbr_particion[3].part_size;
+                                            mbr.mbr_particion[2].part_type = mbr.mbr_particion[3].part_type;
+                                            mbr.mbr_particion[2].part_fit = mbr.mbr_particion[3].part_fit;
+
+                                            strcpy(mbr.mbr_particion[3].part_name, "");
+                                            mbr.mbr_particion[3].part_start = 0;
+                                            mbr.mbr_particion[3].part_status = 'n';
+                                            mbr.mbr_particion[3].part_size = 0;
+                                            mbr.mbr_particion[3].part_type = '\0';
+                                            mbr.mbr_particion[3].part_fit = 'w';
+
+                                            if(strcmp(tdelete,"full") == 0)
+                                            {
+
+                                            }
+
+                                            printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
                                         else if(mbr.mbr_particion[0].part_type == 'l')
                                         {
@@ -1255,7 +1515,7 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                             mbr.mbr_particion[3].part_start = 0;
                                             mbr.mbr_particion[3].part_status = 'n';
                                             mbr.mbr_particion[3].part_size = 0;
-                                            mbr.mbr_particion[3].part_type = 'p';
+                                            mbr.mbr_particion[3].part_type = '\0';
                                             mbr.mbr_particion[3].part_fit = 'w';
 
                                             if(strcmp(tdelete,"full") == 0)
@@ -1267,7 +1527,33 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                         }
                                         else if(mbr.mbr_particion[0].part_type == 'e')
                                         {
+                                            strcpy(mbr.mbr_particion[1].part_name, mbr.mbr_particion[2].part_name);
+                                            mbr.mbr_particion[1].part_start = mbr.mbr_particion[2].part_start;
+                                            mbr.mbr_particion[1].part_status = mbr.mbr_particion[2].part_status;
+                                            mbr.mbr_particion[1].part_size = mbr.mbr_particion[2].part_size;
+                                            mbr.mbr_particion[1].part_type = mbr.mbr_particion[2].part_type;
+                                            mbr.mbr_particion[1].part_fit = mbr.mbr_particion[2].part_fit;
 
+                                            strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[3].part_name);
+                                            mbr.mbr_particion[2].part_start = mbr.mbr_particion[3].part_start;
+                                            mbr.mbr_particion[2].part_status = mbr.mbr_particion[3].part_status;
+                                            mbr.mbr_particion[2].part_size = mbr.mbr_particion[3].part_size;
+                                            mbr.mbr_particion[2].part_type = mbr.mbr_particion[3].part_type;
+                                            mbr.mbr_particion[2].part_fit = mbr.mbr_particion[3].part_fit;
+
+                                            strcpy(mbr.mbr_particion[3].part_name, "");
+                                            mbr.mbr_particion[3].part_start = 0;
+                                            mbr.mbr_particion[3].part_status = 'n';
+                                            mbr.mbr_particion[3].part_size = 0;
+                                            mbr.mbr_particion[3].part_type = '\0';
+                                            mbr.mbr_particion[3].part_fit = 'w';
+
+                                            if(strcmp(tdelete,"full") == 0)
+                                            {
+
+                                            }
+
+                                            printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
                                         else if(mbr.mbr_particion[0].part_type == 'l')
                                         {
@@ -1282,7 +1568,7 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                             mbr.mbr_particion[3].part_start = 0;
                                             mbr.mbr_particion[3].part_status = 'n';
                                             mbr.mbr_particion[3].part_size = 0;
-                                            mbr.mbr_particion[3].part_type = 'p';
+                                            mbr.mbr_particion[3].part_type = '\0';
                                             mbr.mbr_particion[3].part_fit = 'w';
 
                                             if(strcmp(tdelete,"full") == 0)
@@ -1294,7 +1580,33 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                         }
                                         else if(mbr.mbr_particion[0].part_type == 'e')
                                         {
+                                            strcpy(mbr.mbr_particion[1].part_name, mbr.mbr_particion[2].part_name);
+                                            mbr.mbr_particion[1].part_start = mbr.mbr_particion[2].part_start;
+                                            mbr.mbr_particion[1].part_status = mbr.mbr_particion[2].part_status;
+                                            mbr.mbr_particion[1].part_size = mbr.mbr_particion[2].part_size;
+                                            mbr.mbr_particion[1].part_type = mbr.mbr_particion[2].part_type;
+                                            mbr.mbr_particion[1].part_fit = mbr.mbr_particion[2].part_fit;
 
+                                            strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[3].part_name);
+                                            mbr.mbr_particion[2].part_start = mbr.mbr_particion[3].part_start;
+                                            mbr.mbr_particion[2].part_status = mbr.mbr_particion[3].part_status;
+                                            mbr.mbr_particion[2].part_size = mbr.mbr_particion[3].part_size;
+                                            mbr.mbr_particion[2].part_type = mbr.mbr_particion[3].part_type;
+                                            mbr.mbr_particion[2].part_fit = mbr.mbr_particion[3].part_fit;
+
+                                            strcpy(mbr.mbr_particion[3].part_name, "");
+                                            mbr.mbr_particion[3].part_start = 0;
+                                            mbr.mbr_particion[3].part_status = 'n';
+                                            mbr.mbr_particion[3].part_size = 0;
+                                            mbr.mbr_particion[3].part_type = '\0';
+                                            mbr.mbr_particion[3].part_fit = 'w';
+
+                                            if(strcmp(tdelete,"full") == 0)
+                                            {
+
+                                            }
+
+                                            printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
                                         else if(mbr.mbr_particion[0].part_type == 'l')
                                         {
@@ -1571,6 +1883,7 @@ void ejecutarREP(char *name, char *path, char *id, char *ruta)
 
         char * archivo = strrchr(path,'/');
         char directorio [256];
+        memset(directorio,'\0',256);
         int tamano = strlen(path) - strlen(archivo);
         strncpy(directorio, path, tamano);
 
@@ -1807,7 +2120,7 @@ void reporteDISK(char *path, char *rutaDisco, char *nombreParticion)
                 }
                 else if(mbr.mbr_particion[indicesParticiones[i]].part_type == 'e')
                 {
-                    fprintf ( reporte, "| EXTENDIDA&#92;nNombre: %s ", mbr.mbr_particion[indicesParticiones[i]].part_name);
+                    fprintf ( reporte, "| {EXTENDIDA&#92;nNombre: %s | {EBR | libre}}", mbr.mbr_particion[indicesParticiones[i]].part_name);
                 }
                 else
                 {
@@ -1822,7 +2135,7 @@ void reporteDISK(char *path, char *rutaDisco, char *nombreParticion)
                 }
                 else if(mbr.mbr_particion[indicesParticiones[i]].part_type == 'e')
                 {
-                    fprintf ( reporte, "| libre&#92;n%d bytes  | EXTENDIDA&#92;nNombre: %s ",particionesLlenas[i]-menorActual, mbr.mbr_particion[indicesParticiones[i]].part_name);
+                    fprintf ( reporte, "| libre&#92;n%d bytes  | {EXTENDIDA&#92;nNombre: %s | {EBR | libre}}",particionesLlenas[i]-menorActual, mbr.mbr_particion[indicesParticiones[i]].part_name);
                 }
                 else
                 {
