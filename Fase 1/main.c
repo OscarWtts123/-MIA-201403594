@@ -551,13 +551,13 @@ void retornarIdParticion(char* id, char* path, char* nombre)
 
     while(disco < 50) //almacena hasta el índice 49 (50 discos)
     {
-        if(strcmp(particionesMontadas[disco][0] ,path)==0){
+        if(strcmp(particionesMontadas[disco][0] ,path)==0)
+        {
 
-            while (strcmp(particionesMontadas[disco][particion] ,nombre)!=0)
+            while ((strcmp(particionesMontadas[disco][particion] ,nombre)!=0) && (particion < 50))
             {
                 particion++;
             }
-
             sprintf(aux, "vd%c%d",identificadores[disco], particion);
             strcpy(id, aux);
             break;
@@ -870,11 +870,13 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                             fitPart = 'f';
                         }
 
+                        int unidadesExtras = 1024 * atof(add); //unidad por defecto Kilobytes expresado en bytes
                         int unidades = 1024 * atof(size); // unidad por defecto Kilobytes, unidades es el size expresado en bytes
                         int banderaTamano = 0;
 
                         if(strcmp(unit,"m") == 0)
                         {
+                            unidadesExtras = 1024 * 1024 * atof(add);
                             unidades = 1024 * 1024 * atof(size);
                             if(atof(size)>=2)
                             {
@@ -884,6 +886,7 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                         else if(strcmp(unit,"b") == 0)
                         {
                             unidades = atof(size);
+                            unidadesExtras = atof(add);
                             if(atof(size)>=2097152)
                             {
                                 banderaTamano = 1;
@@ -1283,6 +1286,10 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                                 fseek(disco,mbr.mbr_particion[indiceExtendida].part_start,SEEK_SET);
                                                 fwrite(&ebr,sizeof(ebr),1,disco);
                                             }
+                                            else
+                                            {
+                                                printf("\n\x1B[31m****No se escribió el ebr.****\x1B[0m\n");
+                                            }
 
                                         }
                                         else
@@ -1347,15 +1354,30 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
 
                                     char* idTemporal = malloc(strlen("solo quiero ocupar espacio :v") + 100);
                                     memset(idTemporal,'\0',strlen(idTemporal));
+                                    strcpy(idTemporal, "");
 
                                     retornarIdParticion(idTemporal,pathLimpio,nameLimpio);
-                                    printf("idTemp: %s\n",idTemporal);
                                     ejecutarUNMOUNT(idTemporal);
+
+                                    char caracterNulo [1];
+
                                     /** aquí terminé **/
                                     if(strcmp(mbr.mbr_particion[0].part_name,nameLimpio) == 0) //quiero eliminar la part0
                                     {
                                         if(mbr.mbr_particion[0].part_type == 'p')
                                         {
+
+                                            if(strcmp(tdelete,"full") == 0)
+                                            {
+                                                fseek(disco,mbr.mbr_particion[0].part_start,SEEK_SET);
+
+                                                int i = 0;
+                                                for(i = mbr.mbr_particion[0].part_start; i < mbr.mbr_particion[0].part_size; i++)
+                                                {
+                                                    fwrite (caracterNulo, sizeof(caracterNulo), 1, disco);
+                                                }
+                                            }
+
                                             strcpy(mbr.mbr_particion[0].part_name, mbr.mbr_particion[1].part_name);
                                             mbr.mbr_particion[0].part_start = mbr.mbr_particion[1].part_start;
                                             mbr.mbr_particion[0].part_status = mbr.mbr_particion[1].part_status;
@@ -1383,16 +1405,23 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                             mbr.mbr_particion[3].part_size = 0;
                                             mbr.mbr_particion[3].part_type = '\0';
                                             mbr.mbr_particion[3].part_fit = 'w';
-
-                                            if(strcmp(tdelete,"full") == 0)
-                                            {
-
-                                            }
 
                                             printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
                                         else if(mbr.mbr_particion[0].part_type == 'e')
                                         {
+
+                                            if(strcmp(tdelete,"full") == 0)
+                                            {
+                                                fseek(disco,mbr.mbr_particion[0].part_start,SEEK_SET);
+
+                                                int i = 0;
+                                                for(i = mbr.mbr_particion[0].part_start; i < mbr.mbr_particion[0].part_size; i++)
+                                                {
+                                                    fwrite (caracterNulo, sizeof(caracterNulo), 1, disco);
+                                                }
+                                            }
+                                            /** y se deberían borrar las particiones logicas... DEBERÍAN.**/
                                             strcpy(mbr.mbr_particion[0].part_name, mbr.mbr_particion[1].part_name);
                                             mbr.mbr_particion[0].part_start = mbr.mbr_particion[1].part_start;
                                             mbr.mbr_particion[0].part_status = mbr.mbr_particion[1].part_status;
@@ -1420,11 +1449,6 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                             mbr.mbr_particion[3].part_size = 0;
                                             mbr.mbr_particion[3].part_type = '\0';
                                             mbr.mbr_particion[3].part_fit = 'w';
-
-                                            if(strcmp(tdelete,"full") == 0)
-                                            {
-
-                                            }
 
                                             printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
@@ -1435,8 +1459,20 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                     }
                                     else if(strcmp(mbr.mbr_particion[1].part_name,nameLimpio) == 0) //quiero eliminar la part1
                                     {
-                                        if(mbr.mbr_particion[0].part_type == 'p')
+                                        if(mbr.mbr_particion[1].part_type == 'p')
                                         {
+
+                                            if(strcmp(tdelete,"full") == 0)
+                                            {
+                                                fseek(disco,mbr.mbr_particion[1].part_start,SEEK_SET);
+
+                                                int i = 0;
+                                                for(i = mbr.mbr_particion[1].part_start; i < mbr.mbr_particion[1].part_size; i++)
+                                                {
+                                                    fwrite (caracterNulo, sizeof(caracterNulo), 1, disco);
+                                                }
+                                            }
+
                                             strcpy(mbr.mbr_particion[1].part_name, mbr.mbr_particion[2].part_name);
                                             mbr.mbr_particion[1].part_start = mbr.mbr_particion[2].part_start;
                                             mbr.mbr_particion[1].part_status = mbr.mbr_particion[2].part_status;
@@ -1458,15 +1494,22 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                             mbr.mbr_particion[3].part_type = '\0';
                                             mbr.mbr_particion[3].part_fit = 'w';
 
-                                            if(strcmp(tdelete,"full") == 0)
-                                            {
-
-                                            }
-
                                             printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
-                                        else if(mbr.mbr_particion[0].part_type == 'e')
+                                        else if(mbr.mbr_particion[1].part_type == 'e')
                                         {
+
+                                            if(strcmp(tdelete,"full") == 0)
+                                            {
+                                                fseek(disco,mbr.mbr_particion[1].part_start,SEEK_SET);
+
+                                                int i = 0;
+                                                for(i = mbr.mbr_particion[1].part_start; i < mbr.mbr_particion[1].part_size; i++)
+                                                {
+                                                    fwrite (caracterNulo, sizeof(caracterNulo), 1, disco);
+                                                }
+                                            }
+
                                             strcpy(mbr.mbr_particion[1].part_name, mbr.mbr_particion[2].part_name);
                                             mbr.mbr_particion[1].part_start = mbr.mbr_particion[2].part_start;
                                             mbr.mbr_particion[1].part_status = mbr.mbr_particion[2].part_status;
@@ -1488,51 +1531,28 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                             mbr.mbr_particion[3].part_type = '\0';
                                             mbr.mbr_particion[3].part_fit = 'w';
 
-                                            if(strcmp(tdelete,"full") == 0)
-                                            {
-
-                                            }
-
                                             printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
-                                        else if(mbr.mbr_particion[0].part_type == 'l')
+                                        else if(mbr.mbr_particion[1].part_type == 'l')
                                         {
 
                                         }
                                     }
                                     else if(strcmp(mbr.mbr_particion[2].part_name,nameLimpio) == 0) //quiero eliminar la part2
                                     {
-                                        if(mbr.mbr_particion[0].part_type == 'p')
+                                        if(mbr.mbr_particion[2].part_type == 'p')
                                         {
-                                            strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[3].part_name);
-                                            mbr.mbr_particion[2].part_start = mbr.mbr_particion[3].part_start;
-                                            mbr.mbr_particion[2].part_status = mbr.mbr_particion[3].part_status;
-                                            mbr.mbr_particion[2].part_size = mbr.mbr_particion[3].part_size;
-                                            mbr.mbr_particion[2].part_type = mbr.mbr_particion[3].part_type;
-                                            mbr.mbr_particion[2].part_fit = mbr.mbr_particion[3].part_fit;
-
-                                            strcpy(mbr.mbr_particion[3].part_name, "");
-                                            mbr.mbr_particion[3].part_start = 0;
-                                            mbr.mbr_particion[3].part_status = 'n';
-                                            mbr.mbr_particion[3].part_size = 0;
-                                            mbr.mbr_particion[3].part_type = '\0';
-                                            mbr.mbr_particion[3].part_fit = 'w';
 
                                             if(strcmp(tdelete,"full") == 0)
                                             {
+                                                fseek(disco,mbr.mbr_particion[2].part_start,SEEK_SET);
 
+                                                int i = 0;
+                                                for(i = mbr.mbr_particion[2].part_start; i < mbr.mbr_particion[2].part_size; i++)
+                                                {
+                                                    fwrite (caracterNulo, sizeof(caracterNulo), 1, disco);
+                                                }
                                             }
-
-                                            printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
-                                        }
-                                        else if(mbr.mbr_particion[0].part_type == 'e')
-                                        {
-                                            strcpy(mbr.mbr_particion[1].part_name, mbr.mbr_particion[2].part_name);
-                                            mbr.mbr_particion[1].part_start = mbr.mbr_particion[2].part_start;
-                                            mbr.mbr_particion[1].part_status = mbr.mbr_particion[2].part_status;
-                                            mbr.mbr_particion[1].part_size = mbr.mbr_particion[2].part_size;
-                                            mbr.mbr_particion[1].part_type = mbr.mbr_particion[2].part_type;
-                                            mbr.mbr_particion[1].part_fit = mbr.mbr_particion[2].part_fit;
 
                                             strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[3].part_name);
                                             mbr.mbr_particion[2].part_start = mbr.mbr_particion[3].part_start;
@@ -1548,51 +1568,58 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                             mbr.mbr_particion[3].part_type = '\0';
                                             mbr.mbr_particion[3].part_fit = 'w';
 
+                                            printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
+                                        }
+                                        else if(mbr.mbr_particion[2].part_type == 'e')
+                                        {
+
                                             if(strcmp(tdelete,"full") == 0)
                                             {
+                                                fseek(disco,mbr.mbr_particion[2].part_start,SEEK_SET);
 
+                                                int i = 0;
+                                                for(i = mbr.mbr_particion[2].part_start; i < mbr.mbr_particion[2].part_size; i++)
+                                                {
+                                                    fwrite (caracterNulo, sizeof(caracterNulo), 1, disco);
+                                                }
                                             }
+
+                                            strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[3].part_name);
+                                            mbr.mbr_particion[2].part_start = mbr.mbr_particion[3].part_start;
+                                            mbr.mbr_particion[2].part_status = mbr.mbr_particion[3].part_status;
+                                            mbr.mbr_particion[2].part_size = mbr.mbr_particion[3].part_size;
+                                            mbr.mbr_particion[2].part_type = mbr.mbr_particion[3].part_type;
+                                            mbr.mbr_particion[2].part_fit = mbr.mbr_particion[3].part_fit;
+
+                                            strcpy(mbr.mbr_particion[3].part_name, "");
+                                            mbr.mbr_particion[3].part_start = 0;
+                                            mbr.mbr_particion[3].part_status = 'n';
+                                            mbr.mbr_particion[3].part_size = 0;
+                                            mbr.mbr_particion[3].part_type = '\0';
+                                            mbr.mbr_particion[3].part_fit = 'w';
 
                                             printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
-                                        else if(mbr.mbr_particion[0].part_type == 'l')
+                                        else if(mbr.mbr_particion[2].part_type == 'l')
                                         {
 
                                         }
                                     }
                                     else if(strcmp(mbr.mbr_particion[3].part_name,nameLimpio) == 0) //quiero eliminar la part3
                                     {
-                                        if(mbr.mbr_particion[0].part_type == 'p')
+                                        if(mbr.mbr_particion[3].part_type == 'p')
                                         {
-                                            strcpy(mbr.mbr_particion[3].part_name, "");
-                                            mbr.mbr_particion[3].part_start = 0;
-                                            mbr.mbr_particion[3].part_status = 'n';
-                                            mbr.mbr_particion[3].part_size = 0;
-                                            mbr.mbr_particion[3].part_type = '\0';
-                                            mbr.mbr_particion[3].part_fit = 'w';
 
                                             if(strcmp(tdelete,"full") == 0)
                                             {
+                                                fseek(disco,mbr.mbr_particion[3].part_start,SEEK_SET);
 
+                                                int i = 0;
+                                                for(i = mbr.mbr_particion[3].part_start; i < mbr.mbr_particion[3].part_size; i++)
+                                                {
+                                                    fwrite (caracterNulo, sizeof(caracterNulo), 1, disco);
+                                                }
                                             }
-
-                                            printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
-                                        }
-                                        else if(mbr.mbr_particion[0].part_type == 'e')
-                                        {
-                                            strcpy(mbr.mbr_particion[1].part_name, mbr.mbr_particion[2].part_name);
-                                            mbr.mbr_particion[1].part_start = mbr.mbr_particion[2].part_start;
-                                            mbr.mbr_particion[1].part_status = mbr.mbr_particion[2].part_status;
-                                            mbr.mbr_particion[1].part_size = mbr.mbr_particion[2].part_size;
-                                            mbr.mbr_particion[1].part_type = mbr.mbr_particion[2].part_type;
-                                            mbr.mbr_particion[1].part_fit = mbr.mbr_particion[2].part_fit;
-
-                                            strcpy(mbr.mbr_particion[2].part_name, mbr.mbr_particion[3].part_name);
-                                            mbr.mbr_particion[2].part_start = mbr.mbr_particion[3].part_start;
-                                            mbr.mbr_particion[2].part_status = mbr.mbr_particion[3].part_status;
-                                            mbr.mbr_particion[2].part_size = mbr.mbr_particion[3].part_size;
-                                            mbr.mbr_particion[2].part_type = mbr.mbr_particion[3].part_type;
-                                            mbr.mbr_particion[2].part_fit = mbr.mbr_particion[3].part_fit;
 
                                             strcpy(mbr.mbr_particion[3].part_name, "");
                                             mbr.mbr_particion[3].part_start = 0;
@@ -1601,14 +1628,32 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                                             mbr.mbr_particion[3].part_type = '\0';
                                             mbr.mbr_particion[3].part_fit = 'w';
 
+                                            printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
+                                        }
+                                        else if(mbr.mbr_particion[3].part_type == 'e')
+                                        {
+
                                             if(strcmp(tdelete,"full") == 0)
                                             {
+                                                fseek(disco,mbr.mbr_particion[3].part_start,SEEK_SET);
 
+                                                int i = 0;
+                                                for(i = mbr.mbr_particion[3].part_start; i < mbr.mbr_particion[3].part_size; i++)
+                                                {
+                                                    fwrite (caracterNulo, sizeof(caracterNulo), 1, disco);
+                                                }
                                             }
+
+                                            strcpy(mbr.mbr_particion[3].part_name, "");
+                                            mbr.mbr_particion[3].part_start = 0;
+                                            mbr.mbr_particion[3].part_status = 'n';
+                                            mbr.mbr_particion[3].part_size = 0;
+                                            mbr.mbr_particion[3].part_type = '\0';
+                                            mbr.mbr_particion[3].part_fit = 'w';
 
                                             printf("\n\x1B[33m****La partición se ha eliminado exitosamente.****\x1B[0m\n");
                                         }
-                                        else if(mbr.mbr_particion[0].part_type == 'l')
+                                        else if(mbr.mbr_particion[3].part_type == 'l')
                                         {
 
                                         }
@@ -1627,7 +1672,236 @@ void ejecutarFDISK(char* size, char* unit, char* path, char* type, char* fit, ch
                         }
                         else if((strcmp(tdelete,"") == 0) && (strcmp(add,"") != 0)) //significa que se quiere agregar/quitar tamaño
                         {
-//                            redimensionarParticion();
+                            if(strcmp(mbr.mbr_particion[0].part_name, nameLimpio) == 0)
+                            {
+                                if(mbr.mbr_particion[1].part_status == 'n') //quiere decir que solo hay 1 partición
+                                {
+                                    if((mbr.mbr_tamano - (mbr.mbr_particion[0].part_size + mbr.mbr_particion[0].part_start)) >= unidadesExtras) //cabe entre part 0 y el tamaño total
+                                    {
+                                        if((mbr.mbr_particion[0].part_size + unidadesExtras) >= 2048) // sigue siendo mayor que 3MB
+                                        {
+                                            if(mbr.mbr_particion[0].part_type == 'p')
+                                            {
+                                                mbr.mbr_particion[0].part_size = mbr.mbr_particion[0].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[0].part_type == 'e')
+                                            {
+                                                mbr.mbr_particion[0].part_size = mbr.mbr_particion[0].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[0].part_type == 'l')
+                                            {
+
+                                            }
+                                        }
+                                        else
+                                        {
+                                            printf("\n\x1B[33m****No se ha podido modificar la partición, el tamaño de la partición debe ser mayor a 2MB.****\x1B[0m\n");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        printf("\n\x1B[33m****No se ha podido modificar la partición, no hay espacio suficiente.****\x1B[0m\n");
+                                    }
+                                }
+                                else
+                                {
+                                    if((mbr.mbr_particion[1].part_start - (mbr.mbr_particion[0].part_size + mbr.mbr_particion[0].part_start)) >= unidadesExtras) //cabe entre el part0 y part1
+                                    {
+                                        if((mbr.mbr_particion[0].part_size + unidadesExtras) >= 2048) // sigue siendo mayor que 3MB
+                                        {
+                                            if(mbr.mbr_particion[0].part_type == 'p')
+                                            {
+                                                mbr.mbr_particion[0].part_size = mbr.mbr_particion[0].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[0].part_type == 'e')
+                                            {
+                                                mbr.mbr_particion[0].part_size = mbr.mbr_particion[0].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[0].part_type == 'l')
+                                            {
+
+                                            }
+                                        }
+                                        else
+                                        {
+                                            printf("\n\x1B[33m****No se ha podido modificar la partición, el tamaño de la partición debe ser mayor a 2MB.****\x1B[0m\n");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        printf("\n\x1B[33m****No se ha podido modificar la partición, no hay espacio suficiente.****\x1B[0m\n");
+                                    }
+                                }
+                            }
+                            else if(strcmp(mbr.mbr_particion[1].part_name, nameLimpio) == 0)
+                            {
+                                if(mbr.mbr_particion[2].part_status == 'n') //quiere decir que solo hay 1 partición
+                                {
+                                    if((mbr.mbr_tamano - (mbr.mbr_particion[1].part_size + mbr.mbr_particion[1].part_start)) >= unidadesExtras) //cabe entre part 0 y el tamaño total
+                                    {
+                                        if((mbr.mbr_particion[1].part_size + unidadesExtras) >= 2048) // sigue siendo mayor que 3MB
+                                        {
+                                            if(mbr.mbr_particion[1].part_type == 'p')
+                                            {
+                                                mbr.mbr_particion[1].part_size = mbr.mbr_particion[1].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[1].part_type == 'e')
+                                            {
+                                                mbr.mbr_particion[1].part_size = mbr.mbr_particion[1].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[1].part_type == 'l')
+                                            {
+
+                                            }
+                                        }
+                                        else
+                                        {
+                                            printf("\n\x1B[33m****No se ha podido modificar la partición, el tamaño de la partición debe ser mayor a 2MB.****\x1B[0m\n");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        printf("\n\x1B[33m****No se ha podido modificar la partición, no hay espacio suficiente.****\x1B[0m\n");
+                                    }
+                                }
+                                else
+                                {
+                                    if((mbr.mbr_particion[2].part_start - (mbr.mbr_particion[1].part_size + mbr.mbr_particion[1].part_start)) >= unidadesExtras) //cabe entre el part0 y part1
+                                    {
+                                        if((mbr.mbr_particion[1].part_size + unidadesExtras) >= 2048) // sigue siendo mayor que 3MB
+                                        {
+                                            if(mbr.mbr_particion[1].part_type == 'p')
+                                            {
+                                                mbr.mbr_particion[1].part_size = mbr.mbr_particion[1].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[1].part_type == 'e')
+                                            {
+                                                mbr.mbr_particion[1].part_size = mbr.mbr_particion[1].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[1].part_type == 'l')
+                                            {
+
+                                            }
+                                        }
+                                        else
+                                        {
+                                            printf("\n\x1B[33m****No se ha podido modificar la partición, el tamaño de la partición debe ser mayor a 2MB.****\x1B[0m\n");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        printf("\n\x1B[33m****No se ha podido modificar la partición, no hay espacio suficiente.****\x1B[0m\n");
+                                    }
+                                }
+                            }
+                            else if(strcmp(mbr.mbr_particion[2].part_name, nameLimpio) == 0)
+                            {
+                                if(mbr.mbr_particion[3].part_status == 'n') //quiere decir que solo hay 1 partición
+                                {
+                                    if((mbr.mbr_tamano - (mbr.mbr_particion[2].part_size + mbr.mbr_particion[2].part_start)) >= unidadesExtras) //cabe entre part 0 y el tamaño total
+                                    {
+                                        if((mbr.mbr_particion[2].part_size + unidadesExtras) >= 2048) // sigue siendo mayor que 3MB
+                                        {
+                                            if(mbr.mbr_particion[2].part_type == 'p')
+                                            {
+                                                mbr.mbr_particion[2].part_size = mbr.mbr_particion[2].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[2].part_type == 'e')
+                                            {
+                                                mbr.mbr_particion[2].part_size = mbr.mbr_particion[2].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[2].part_type == 'l')
+                                            {
+
+                                            }
+                                        }
+                                        else
+                                        {
+                                            printf("\n\x1B[33m****No se ha podido modificar la partición, el tamaño de la partición debe ser mayor a 2MB.****\x1B[0m\n");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        printf("\n\x1B[33m****No se ha podido modificar la partición, no hay espacio suficiente.****\x1B[0m\n");
+                                    }
+                                }
+                                else
+                                {
+                                    if((mbr.mbr_particion[3].part_start - (mbr.mbr_particion[2].part_size + mbr.mbr_particion[2].part_start)) >= unidadesExtras) //cabe entre el part0 y part1
+                                    {
+                                        if((mbr.mbr_particion[2].part_size + unidadesExtras) >= 2048) // sigue siendo mayor que 3MB
+                                        {
+                                            if(mbr.mbr_particion[2].part_type == 'p')
+                                            {
+                                                mbr.mbr_particion[2].part_size = mbr.mbr_particion[2].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[2].part_type == 'e')
+                                            {
+                                                mbr.mbr_particion[2].part_size = mbr.mbr_particion[2].part_size + unidadesExtras;
+                                                printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                            }
+                                            else if(mbr.mbr_particion[2].part_type == 'l')
+                                            {
+
+                                            }
+                                        }
+                                        else
+                                        {
+                                            printf("\n\x1B[33m****No se ha podido modificar la partición, el tamaño de la partición debe ser mayor a 2MB.****\x1B[0m\n");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        printf("\n\x1B[33m****No se ha podido modificar la partición, no hay espacio suficiente.****\x1B[0m\n");
+                                    }
+                                }
+                            }
+                            else if(strcmp(mbr.mbr_particion[3].part_name, nameLimpio) == 0)
+                            {
+                                if((mbr.mbr_tamano - (mbr.mbr_particion[3].part_size + mbr.mbr_particion[3].part_start)) >= unidadesExtras) //cabe entre part 0 y el tamaño total
+                                {
+                                    if((mbr.mbr_particion[3].part_size + unidadesExtras) >= 2048) // sigue siendo mayor que 3MB
+                                    {
+                                        if(mbr.mbr_particion[3].part_type == 'p')
+                                        {
+                                            mbr.mbr_particion[3].part_size = mbr.mbr_particion[3].part_size + unidadesExtras;
+                                            printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                        }
+                                        else if(mbr.mbr_particion[3].part_type == 'e')
+                                        {
+                                            mbr.mbr_particion[3].part_size = mbr.mbr_particion[3].part_size + unidadesExtras;
+                                            printf("\n\x1B[33m****¡La partición se ha modificado con éxito!****\x1B[0m\n");
+                                        }
+                                        else if(mbr.mbr_particion[3].part_type == 'l')
+                                        {
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        printf("\n\x1B[33m****No se ha podido modificar la partición, el tamaño de la partición debe ser mayor a 2MB.****\x1B[0m\n");
+                                    }
+                                }
+                                else
+                                {
+                                    printf("\n\x1B[33m****No se ha podido modificar la partición, no hay espacio suficiente.****\x1B[0m\n");
+                                }
+                            }
+                            else
+                            {
+                                printf("\n\x1B[33m****La partición que desas modificar no existe.****\x1B[0m\n");
+                            }
                         }
 
                         fseek(disco,0,SEEK_SET);
