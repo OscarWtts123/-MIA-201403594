@@ -810,37 +810,39 @@ void ejecutarRMDISK(char* path)
             char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
             strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
 
-//            FILE *archivo = fopen(pathLimpio,"r");
-//
-//            if(archivo != NULL)
-//            {
-//
-//            }
-//            else
-//            {
-//
-//            }
+            FILE *archivo = fopen(pathLimpio,"r");
 
-            while(disco < 50) //almacena hasta el índice 49 (50 discos)
+            if(archivo != NULL)
             {
-                if(strcmp(particionesMontadas[disco][0] ,pathLimpio)==0){
-                    bandera = 1;
-                    break;
+                while(disco < 50) //almacena hasta el índice 49 (50 discos)
+                {
+                    if(strcmp(particionesMontadas[disco][0] ,pathLimpio)==0){
+                        bandera = 1;
+                        break;
+                    }
+                    disco++;
                 }
-                disco++;
-            }
 
-            /**nuevo**/
-            if(bandera == 0)
-            {
-                char eliminarDisco [100] = "rm ";
-                strcat(eliminarDisco, path);
-                system(eliminarDisco);
+                /**nuevo**/
+                if(bandera == 0)
+                {
+                    char eliminarDisco [100] = "rm ";
+                    strcat(eliminarDisco, path);
+                    system(eliminarDisco);
+                    printf("\n\x1B[33m****¡El disco ha sido eliminado exitosamente!****\x1B[0m\n");
+                }
+                else
+                {
+                    printf("\n\x1B[33m****Para poder borrar el disco primero desmonta sus particiones.****\x1B[0m\n");
+                }
+
+                fclose(archivo);
             }
             else
             {
-                printf("\n\x1B[33m****Para poder borrar el disco primero desmonta sus particiones.****\x1B[0m\n");
+                printf("\n\x1B[33m****El disco que deseas eliminar no existe.****\x1B[0m\n");
             }
+
 
            //printf("\n\x1B[33m****¡Disco eliminado exitosamente!****\x1B[0m\n");
         }
