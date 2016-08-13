@@ -495,7 +495,19 @@ void leerComando(char* linea)
                 comando = strtok(NULL, " ");
                 char* aux = malloc(strlen("solo quiero ocupar espacio :v") + 100);
                 strcpy(aux,comando+1); //+1 para quitar el ":" extra
+                char auxArray[256];
+                strcpy(auxArray, aux);
+
+                while(strcmp(&auxArray[strlen(auxArray) -1],"\"") != 0)
+                {
+                    comando = strtok(NULL, " ");
+                    strcat(aux, " ");
+                    strcat(aux, comando);
+                    strcpy(auxArray,aux);
+                }
+
                 strcpy(name, aux);
+//                printf("El contenido del comando -name es: %s\n", aux);
             }
             else if(strcmp(comando,"-id") == 0)
             {
@@ -797,10 +809,20 @@ void ejecutarRMDISK(char* path)
             int bandera = 0;
             char* pathLimpio = malloc(strlen("solo quiero ocupar espacio :v") + 100);
             strncpy(pathLimpio,path+1,strlen(path)-2); //-2 porque toma en cuenta las 2 comillas
-            printf("path limpio: %s\n",pathLimpio);
+
+//            FILE *archivo = fopen(pathLimpio,"r");
+//
+//            if(archivo != NULL)
+//            {
+//
+//            }
+//            else
+//            {
+//
+//            }
+
             while(disco < 50) //almacena hasta el índice 49 (50 discos)
             {
-            printf("RUTA EN %d: %s\n",disco,particionesMontadas[disco][0]);
                 if(strcmp(particionesMontadas[disco][0] ,pathLimpio)==0){
                     bandera = 1;
                     break;
@@ -809,7 +831,6 @@ void ejecutarRMDISK(char* path)
             }
 
             /**nuevo**/
-            printf("bandera: %d\n",bandera);
             if(bandera == 0)
             {
                 char eliminarDisco [100] = "rm ";
@@ -2173,51 +2194,51 @@ void ejecutarREP(char *name, char *path, char *id, char *ruta)
 
         if(strcmp(particionesMontadas[disco][particion],"") != 0) //no existe la partición solicitada
         {
-            if(strcmp(name,"mbr") == 0)
+            if(strcmp(name,"\"mbr\"") == 0)
             {
                 reporteMBR(path, particionesMontadas[disco][0], particionesMontadas[disco][particion]);
             }
-            else if(strcmp(name,"disk") == 0)
+            else if(strcmp(name,"\"disk\"") == 0)
             {
                 reporteDISK(path, particionesMontadas[disco][0], particionesMontadas[disco][particion]);
             }
-            else if(strcmp(name,"inode") == 0)
+            else if(strcmp(name,"\"inode\"") == 0)
             {
 
             }
-            else if(strcmp(name,"journaling") == 0)
+            else if(strcmp(name,"\"journaling\"") == 0)
             {
 
             }
-            else if(strcmp(name,"block") == 0)
+            else if(strcmp(name,"\"block\"") == 0)
             {
 
             }
-            else if(strcmp(name,"bm_inode") == 0)
+            else if(strcmp(name,"\"bm_inode\"") == 0)
             {
 
             }
-            else if(strcmp(name,"bm_block") == 0)
+            else if(strcmp(name,"\"bm_block\"") == 0)
             {
 
             }
-            else if(strcmp(name,"tree") == 0)
+            else if(strcmp(name,"\"tree\"") == 0)
             {
 
             }
-            else if(strcmp(name,"sb") == 0)
+            else if(strcmp(name,"\"sb\"") == 0)
             {
 
             }
-            else if(strcmp(name,"file") == 0)
+            else if(strcmp(name,"\"file\"") == 0)
             {
 
             }
-            else if(strcmp(name,"ls+i") == 0)
+            else if(strcmp(name,"\"ls+i\"") == 0)
             {
 
             }
-            else if(strcmp(name,"ls+l") == 0)
+            else if(strcmp(name,"\"ls+l\"") == 0)
             {
 
             }
@@ -2330,7 +2351,7 @@ if(mbr.mbr_particion[0].part_status != 'n')
     sprintf(comandoDOT, "dot -Tpng \"/home/dacore/Escritorio/ReporteMBR.dot\" -o %s", path);
     system(comandoDOT);
     strcpy(comandoDOT,"");
-    sprintf(comandoDOT, "run-mailcap \"%s\" &", path);
+    sprintf(comandoDOT, "shotwell %s &", path);
     system(comandoDOT);
 }
 
@@ -2437,7 +2458,7 @@ void reporteDISK(char *path, char *rutaDisco, char *nombreParticion)
     sprintf(comandoDOT, "dot -Tpng \"/home/dacore/Escritorio/ReporteDISK.dot\" -o %s", path);
     system(comandoDOT);
     strcpy(comandoDOT,"");
-    sprintf(comandoDOT, "run-mailcap \"%s\" &", path);
+    sprintf(comandoDOT, "shotwell %s &", path);
     system(comandoDOT);
 }
 
